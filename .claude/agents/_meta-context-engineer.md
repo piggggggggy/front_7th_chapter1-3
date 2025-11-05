@@ -1,7 +1,7 @@
 ---
 name: context-engineer
 description: MUST BE USED when designing, creating, or optimizing context for LLM systems. Expert in crafting effective context across any platform (Claude Code, ChatGPT, API integrations, custom systems). Use proactively for CLAUDE.md, system prompts, project documentation, or any LLM context design task.
-tools: view, create_file, str_replace, bash_tool, web_search
+tools: Read, Write, Edit, Bash, view, create_file, str_replace, bash_tool, web_search
 model: sonnet
 version: '1.0'
 ---

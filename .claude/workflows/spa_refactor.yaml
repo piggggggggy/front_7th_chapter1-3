@@ -1,0 +1,675 @@
+# SPA Refactor Workflow v1.0 - Structure Improvement
+# ============================================================================
+# Philosophy: Organize SPA structure for maintainability and scalability
+# ============================================================================
+
+name: spa-refactor
+version: '1.0-LEAN'
+description: Lightweight SPA structure refactoring workflow for React/Vue projects
+philosophy: 'Better structure enables better features'
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Context Requirements (What orchestrator needs to start)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+context:
+  required:
+    - scope_path: string # Path to refactor: src/components/ or src/features/auth/
+    - refactor_type: enum[components, state, routing, full-structure]
+    - project_id: string # SR-XXX format (Structure Refactor)
+
+  optional:
+    - complexity_hint: enum[simple, standard, complex]
+    - focus_areas: array # Specific areas: ['component-organization', 'state-management', 'routing']
+    - test_path: string # Path to tests (e.g., src/__tests__/)
+    - preserve_patterns: array # Existing patterns to maintain
+
+  prerequisites:
+    verify:
+      - directory_exists: '{{scope_path}}'
+      - tests_exist: true # Must have existing tests
+      - tests_passing: true # All tests must pass before refactoring
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Routing (3-tier system for SPA refactoring)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+routing:
+  detection:
+    simple:
+      signals: ['single-feature', 'component-only', 'small-scope']
+      scope: '< 10 files'
+      focus: 'Component organization within single feature'
+      time_estimate: '30-60 minutes'
+
+    standard:
+      signals: ['multi-feature', 'state-management', 'moderate-scope']
+      scope: '10-30 files'
+      focus: 'Multiple features or state management'
+      time_estimate: '1-2 hours'
+
+    complex:
+      signals: ['full-app', 'routing', 'architecture', 'large-scope']
+      scope: '> 30 files'
+      focus: 'Full structure or major architectural changes'
+      time_estimate: '2-4 hours'
+
+  routes:
+    simple:
+      agents: [architect, refactor]
+      phases: [analysis, restructure]
+      outputs: 2
+      checkpoints: []
+
+    standard:
+      agents: [architect, refactor, qa]
+      phases: [analysis, restructure, verification]
+      outputs: 3
+      checkpoints: [restructure.after]
+
+    complex:
+      agents: [architect, refactor, qa]
+      phases: [analysis, restructure, verification]
+      outputs: 3
+      checkpoints: [analysis.after, restructure.after]
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Phases (Lightweight 2-3 phase structure)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+phases:
+  # ──────────────────────────────────────────────────────────────────────────
+  # PHASE 1: ANALYSIS - Understand current structure and plan improvements
+  # ──────────────────────────────────────────────────────────────────────────
+  analysis:
+    agent: architect
+
+    tasks:
+      - id: unified_structure_analysis
+        prompt: |
+          Project: {{project_id}}
+          Scope: {{scope_path}}
+          Type: {{refactor_type}}
+          Route: {{route}}
+
+          **STEP 1: Explore Current Structure**
+          - Use Glob to find all files in scope (patterns: ['*.tsx', '*.ts', '*.jsx', '*.js', '*.vue'])
+          - Use Read to understand current organization, patterns, conventions
+          - Use Grep to find dependencies, imports, state usage, routing patterns
+          - Identify: Current structure? Pain points? Coupling issues? Naming inconsistencies?
+
+          **STEP 2: Structure Analysis**
+
+          Create SINGLE analysis document with:
+
+          1. Current Structure Assessment
+             - Directory tree (current organization)
+             - Component inventory (types: pages, features, shared, UI)
+             - State management patterns (where state lives)
+             - Routing structure (if applicable)
+             - File naming conventions
+             - Import patterns and dependencies
+
+          2. Issues Identified
+             - Structural problems (poor organization, deep nesting)
+             - Component coupling (tight dependencies)
+             - State management issues (prop drilling, scattered state)
+             - Naming inconsistencies
+             - Code duplication patterns
+             - Performance concerns (bundle size, lazy loading)
+
+          3. Improvement Opportunities (skip if route=simple)
+             {% if route != 'simple' %}
+             - Priority P0: Critical structural issues
+             - Priority P1: High-value improvements
+             - Priority P2: Nice-to-have optimizations
+             - Expected ROI per improvement
+             {% endif %}
+
+          4. Refactoring Strategy
+             - Target structure (proposed organization)
+             - Migration plan (step-by-step)
+             - File move/rename operations
+             - Import update strategy
+             - Risk assessment
+             - Rollback plan
+
+          5. Handoff Summary (3 lines max)
+
+          Depth: {{complexity_hint}}
+
+          Focus areas: {{focus_areas}}
+
+          Output to: 01_structure-analysis.md
+        output: 01_structure-analysis.md
+
+    gates:
+      - check: file_exists(01_structure-analysis.md)
+      - check: contains(01_structure-analysis.md, "Current Structure Assessment")
+      - check: contains(01_structure-analysis.md, "Refactoring Strategy")
+      - check: test_passes({{test_path}}) # Verify tests still pass
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # PHASE 2: RESTRUCTURE - Execute structural improvements
+  # ──────────────────────────────────────────────────────────────────────────
+  restructure:
+    agent: refactor
+    inputs: [analysis.outputs]
+
+    tasks:
+      - id: unified_restructure
+        prompt: |
+          Based on: 01_structure-analysis.md → Refactoring Strategy
+
+          Scope: {{scope_path}}
+          Tests: {{test_path}}
+          Route: {{route}}
+
+          Create SINGLE restructure document with:
+
+          1. Pre-Refactor Backup
+             - Create git backup branch
+             - Document current state
+             - Baseline test results: ✅ all passing
+
+          2. Structure Changes (executed incrementally)
+             - Move/rename files (one logical group at a time)
+             - Update imports and references
+             - Reorganize components by feature/domain
+             - Extract shared components
+             - Consolidate utilities
+             - Update routing configuration (if applicable)
+             - Test status: ✅ after EACH logical group
+
+          3. State Management Improvements (if applicable)
+             {% if refactor_type in ['state', 'full-structure'] %}
+             - Consolidate state logic
+             - Extract custom hooks (React) or composables (Vue)
+             - Centralize store modules (if using state library)
+             - Reduce prop drilling
+             - Test status: ✅ after EACH change
+             {% endif %}
+
+          4. Import Optimization
+             - Update all import paths
+             - Use barrel exports (index files)
+             - Configure path aliases (if beneficial)
+             - Remove unused imports
+             - Test status: ✅ verified
+
+          5. Test Verification (continuous)
+             - Run: npm test (after each logical change)
+             - All tests: ✅ PASSING
+             - No regressions detected
+             - Import errors: ❌ NONE
+             - Type errors: ❌ NONE
+
+          6. Change Log
+             - Files moved/renamed (detailed list)
+             - New directory structure
+             - Import updates count
+             - Test results summary
+             - Commits made
+
+          7. Handoff Summary (3 lines max)
+
+          Depth: {{route}}
+
+          Safety Rules:
+          - Tests must stay GREEN at all times
+          - Commit after each logical group of changes
+          - Rollback immediately on any test failure
+          - Update documentation inline
+
+          Output to: 02_structure-changes.md
+        output: 02_structure-changes.md
+
+      - id: apply_restructure
+        prompt: |
+          Based on: 02_structure-changes.md (incremental plan)
+
+          Apply structure changes to: {{scope_path}}
+
+          Guidelines:
+          - ONE logical group at a time (e.g., move all components in feature X)
+          - Update imports immediately after moves
+          - Run tests after each group
+          - Commit if tests pass, rollback if fail
+          - Update any affected documentation
+          - Maintain backward compatibility where needed
+
+          Safety: Tests must stay GREEN
+        outputs:
+          - {{scope_path}} # Directory structure changes
+
+    gates:
+      - check: file_exists(02_structure-changes.md)
+      - check: test_passes({{test_path}}) # Non-negotiable
+      - check: contains(02_structure-changes.md, "Test status: ✅ PASSING")
+      - check: no_import_errors
+      - check: no_type_errors
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # PHASE 3: VERIFICATION - Quality checks and validation
+  # ──────────────────────────────────────────────────────────────────────────
+  verification:
+    agent: qa
+    skip_if: route.simple
+    inputs: [analysis.outputs, restructure.outputs]
+
+    tasks:
+      - id: unified_verification
+        prompt: |
+          Based on:
+          - Analysis: 01_structure-analysis.md
+          - Changes: 02_structure-changes.md
+          - Code: {{scope_path}}
+          - Tests: {{test_path}}
+
+          Create SINGLE verification document with:
+
+          1. Structure Verification
+             - New structure matches plan: ✅
+             - All files accounted for: ✅
+             - Naming conventions consistent: ✅
+             - Directory organization logical: ✅
+             - Import paths correct: ✅
+
+          2. Test Coverage Analysis
+             - Run full test suite
+             - Coverage maintained or improved
+             - No regressions detected
+             - All tests passing: ✅
+             - Test count: {{test_count}}
+
+          3. Quality Metrics Comparison (skip if route=standard)
+             {% if route == 'complex' %}
+             - Bundle size: before → after
+             - Cyclomatic complexity: before → after
+             - Import depth: before → after
+             - Component coupling: improved
+             - Code duplication: reduced
+             {% endif %}
+
+          4. Integration Verification
+             - TypeScript types: ✅ no errors
+             - Linting: ✅ passing
+             - Build process: ✅ successful
+             - Dev server: ✅ runs without errors
+             - Hot reload: ✅ working
+
+          5. Documentation Check
+             - Updated README (if affected)
+             - Updated component docs
+             - Updated architecture docs (if exists)
+             - Migration notes documented
+
+          6. Quality Summary
+             - Structure improvements achieved
+             - Issues resolved count
+             - Remaining technical debt
+             - Recommendations for next iteration
+
+          7. Handoff Summary (3 lines max)
+
+          Depth: {{route}}
+
+          Output to: 03_structure-verification.md
+        output: 03_structure-verification.md
+
+    gates:
+      - check: file_exists(03_structure-verification.md)
+      - check: test_passes({{test_path}})
+      - check: build_succeeds
+      - check: contains(03_structure-verification.md, "Quality Summary")
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Validation Gates (Ensuring safe refactoring)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+gates:
+  types:
+    test_passes:
+      check: 'exit_code == 0'
+      command: 'npm test'
+      required: true
+      frequency: 'after_each_change_group'
+
+    build_succeeds:
+      check: 'exit_code == 0'
+      command: 'npm run build'
+      required: true
+
+    file_exists:
+      check: 'path.exists()'
+      required: true
+
+    contains:
+      check: 'file.includes(text)'
+      required: true
+
+    no_import_errors:
+      check: 'no_module_not_found'
+      required: true
+
+    no_type_errors:
+      check: 'tsc --noEmit exits 0'
+      required: true
+
+  continuous: # Check after every change group
+    - name: tests_still_passing
+      check: test_passes({{test_path}})
+      action_on_fail: rollback_last_changes
+
+    - name: no_import_errors
+      check: build_succeeds
+      action_on_fail: fix_imports_and_retry
+
+  recovery:
+    test_fails: 'rollback_last_changes'
+    import_errors: 'fix_import_paths'
+    type_errors: 'fix_type_definitions'
+    build_fails: 'rollback_and_investigate'
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Safety Rules (Non-negotiable principles)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+safety:
+  golden_rules:
+    1: 'Tests must stay GREEN'
+    2: 'One logical group of changes at a time'
+    3: 'Commit after each successful group'
+    4: 'Update imports immediately after moves'
+    5: 'Verify build after changes'
+
+  safe_operations: # Low risk
+    - 'Rename files/directories'
+    - 'Move files within same feature'
+    - 'Update imports'
+    - 'Extract components'
+    - 'Add barrel exports'
+
+  risky_operations: # Higher risk, need extra care
+    - 'Change component interfaces'
+    - 'Modify state management structure'
+    - 'Alter routing configuration'
+    - 'Split large components'
+    - 'Merge multiple files'
+
+  rollback_triggers:
+    - 'Any test fails'
+    - 'Import errors'
+    - 'Type errors'
+    - 'Build fails'
+    - 'Runtime errors in dev'
+
+  commit_strategy:
+    frequency: 'after_each_logical_group'
+    message_format: 'refactor(spa): {{change_description}}'
+    verify_before_commit: 'run_tests_and_build'
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Output Structure (Where files go)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+outputs:
+  directory: '.ai-output/features/{{project_id}}/'
+  code_directory: '{{scope_path}}'
+
+  structure:
+    simple_route: # 2 docs + restructured code
+      - 01_structure-analysis.md
+      - 02_structure-changes.md
+      - {{scope_path}} # Restructured directory
+
+    standard_route: # 3 docs + restructured code
+      - 01_structure-analysis.md
+      - 02_structure-changes.md
+      - 03_structure-verification.md
+      - {{scope_path}} # Restructured directory
+
+    complex_route: # 3 docs + restructured code (deeper content)
+      - 01_structure-analysis.md
+      - 02_structure-changes.md
+      - 03_structure-verification.md
+      - {{scope_path}} # Restructured directory
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Orchestrator Instructions (How to execute this workflow)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+orchestration:
+  role: 'Coordinator ONLY - delegate ALL work via Task tool'
+
+  pre_flight:
+    - verify: 'scope_path exists and is accessible'
+    - verify: 'tests exist and are passing (delegate to agent to verify)'
+    - verify: 'Node.js 22.x is active (agent will handle nvm use 22)'
+    - create: 'git backup branch'
+    - detect: 'route based on scope size and refactor_type'
+
+  execution_pattern:
+    analysis_phase:
+      invoke: "Task(subagent_type='architect', prompt='Analyze SPA structure at {{scope_path}}. Explore with Glob/Read/Grep. Understand current organization, identify issues, plan refactoring. Create 01_structure-analysis.md. Verify tests pass. Report: analysis complete, issues found, strategy ready.')"
+      on_completion: "Record agent's reported outputs in state.json"
+      on_fail: "Re-invoke architect with specific feedback"
+
+    restructure_phase:
+      invoke: "Task(subagent_type='refactor', prompt='Execute structure refactoring at {{scope_path}} based on 01_structure-analysis.md. Move files incrementally, update imports, test after each group. Create 02_structure-changes.md. Commit after each success. Report: changes applied, test status, commits made.')"
+      on_completion: "Record agent's reported outputs in state.json"
+      on_fail: "Re-invoke refactor with rollback instruction"
+
+    verification_phase:
+      skip_if: "route.simple"
+      invoke: "Task(subagent_type='qa', prompt='Verify structure refactoring at {{scope_path}}. Check tests, build, types, quality metrics. Create 03_structure-verification.md. Report: verification complete, quality summary, issues if any.')"
+      on_completion: "Record workflow complete in state.json"
+      on_fail: "Re-invoke qa with specific feedback"
+
+  forbidden:
+    - "Read implementation files (delegate to agents)"
+    - "Validate file contents (trust agent reports)"
+    - "Create .md files yourself (use Task tool)"
+    - "Run tests yourself (delegate to agents)"
+    - "Decide WHAT to refactor (that's architect's job)"
+
+  validation_strategy:
+    approach: trust_and_track
+    agent_responsibility: "Agents verify their own outputs and report status"
+    orchestrator_responsibility: "Record agent reports and continue workflow"
+    on_agent_failure: "Re-invoke agent with specific feedback"
+
+  error_handling:
+    retry_limit: 2
+    retry_on: [minor_issues, transient_failures]
+    rollback_on: [test_failure, import_errors, type_errors, build_failure]
+    abort_on: [prerequisite_missing, scope_path_invalid, tests_failing_before_start]
+    fallback: 'restore_backup_and_escalate'
+
+  safety_measures:
+    - 'Create git backup before starting'
+    - 'Agent runs tests continuously'
+    - 'Agent commits after each logical group'
+    - 'Agent handles rollback on failures'
+
+  state_tracking:
+    save: '.ai-output/workflows/state/{{project_id}}_spa-refactor.json'
+    includes: [phase_status, outputs, metrics, changes_applied, commits, rollbacks]
+
+  completion_summary:
+    template: |
+      ✅ SPA Structure Refactor Complete: {{project_id}}
+
+      **Route**: {{route}}
+      **Scope**: {{scope_path}}
+      **Type**: {{refactor_type}}
+      **Duration**: {{total_duration}}
+
+      📊 Improvements:
+      - Files moved/renamed: {{files_changed}}
+      - Imports updated: {{imports_updated}}
+      - Directory structure: ✅ improved
+      - Tests: {{test_count}} passing 🟢
+      - Build: ✅ successful
+
+      🔧 Changes Applied:
+      {{#each changes}}
+      - {{this}}
+      {{/each}}
+
+      ✅ Safety Checks:
+      - Tests: all passing 🟢
+      - Types: no errors ✅
+      - Build: successful ✅
+      - Commits: {{commit_count}}
+      - Rollbacks: {{rollback_count}}
+
+      📁 Outputs:
+      {{#each outputs}}
+      - {{this}}
+      {{/each}}
+
+      **Status**: Structure improved, ready for continued development
+
+      **Next Steps**: Feature development, additional refactoring, or documentation updates
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Refactor Types (Specific focus areas)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+refactor_types:
+  components:
+    focus:
+      - 'Component organization by feature/domain'
+      - 'Shared vs feature-specific components'
+      - 'UI library/design system structure'
+      - 'Component composition patterns'
+
+  state:
+    focus:
+      - 'State management consolidation'
+      - 'Custom hooks/composables extraction'
+      - 'Store module organization'
+      - 'Context/Provider structure'
+      - 'Reduce prop drilling'
+
+  routing:
+    focus:
+      - 'Route configuration organization'
+      - 'Lazy loading setup'
+      - 'Route guards/middleware'
+      - 'Nested routing structure'
+      - 'Route-based code splitting'
+
+  full-structure:
+    focus:
+      - 'Complete SPA architecture'
+      - 'Feature-based organization'
+      - 'All of the above combined'
+      - 'Build optimization'
+      - 'Performance improvements'
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Metrics & Targets
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+metrics:
+  track:
+    - files_moved
+    - files_renamed
+    - imports_updated
+    - test_pass_rate # Must be 100%
+    - build_time_change
+    - bundle_size_change # if applicable
+    - complexity_reduction
+    - commits_made
+    - rollbacks_needed # Target: 0
+
+  targets:
+    test_pass_rate: '100%' # Non-negotiable
+    build_success: 'true' # Non-negotiable
+    type_errors: '0' # Non-negotiable
+    import_errors: '0' # Non-negotiable
+    structure_improvement: 'measurable'
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Metadata
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+meta:
+  version: '1.0.0'
+  architecture: 'lean'
+  last_updated: '2025-11-05'
+
+  workflow:
+    execution_model:
+      type: orchestrated
+      orchestrator_role: coordination_only
+      agent_execution: manual # Agents run via CLI
+
+  philosophy:
+    - 'Better structure enables better features'
+    - 'Tests must stay GREEN always'
+    - 'Incremental changes with continuous validation'
+    - 'Commit frequently, rollback fearlessly'
+    - 'Know when structure is good enough'
+
+  principles:
+    - 'Safety first: tests and build must pass'
+    - 'One logical group at a time'
+    - 'Update imports immediately'
+    - 'Maintain backward compatibility'
+    - 'Document changes inline'
+
+  compatible_with:
+    orchestrator: '>= 1.0'
+    agents:
+      - architect: '>= 2.0'
+      - refactor: '>= 2.0'
+      - qa: '>= 2.0'
+
+    frameworks:
+      - React: '>= 16.8'
+      - Vue: '>= 3.0'
+      - TypeScript: '>= 4.0'
+      - Vite: '>= 4.0'
+
+  related_workflows:
+    - tdd-refactor # Code quality improvements after structure
+    - quick-cleanup # Lighter alternative for minimal changes
+
+  metrics_by_route:
+    simple:
+      time: '30-60 minutes'
+      files: 2 # analysis + changes
+      tokens: '~2,500'
+      scope: '< 10 files'
+
+    standard:
+      time: '1-2 hours'
+      files: 3 # analysis + changes + verification
+      tokens: '~4,000'
+      scope: '10-30 files'
+
+    complex:
+      time: '2-4 hours'
+      files: 3 # deeper content
+      tokens: '~6,000'
+      scope: '> 30 files'
+
+  common_patterns:
+    component_organization:
+      - 'Feature-based: features/auth/components/'
+      - 'Domain-based: domains/user/components/'
+      - 'Atomic design: atoms/, molecules/, organisms/'
+      - 'Flat with prefixes: UserProfile.tsx, UserSettings.tsx'
+
+    state_management:
+      - 'Hooks: hooks/useAuth.ts, hooks/useCart.ts'
+      - 'Store: store/auth/, store/cart/'
+      - 'Context: contexts/AuthContext.tsx'
+      - 'Zustand/Pinia: stores/authStore.ts'
+
+    routing:
+      - 'Route config: routes/index.ts, routes/auth.ts'
+      - 'Lazy loading: pages/ directory with dynamic imports'
+      - 'Route guards: middleware/ or guards/'
+
+  changelog:
+    v1.0:
+      - 'Initial SPA structure refactoring workflow'
+      - 'Lightweight 2-3 phase design'
+      - '3-tier routing (simple/standard/complex)'
+      - 'Support for components, state, routing, and full-structure refactoring'
+      - 'Incremental changes with continuous testing'
+      - 'Compatible with React, Vue, TypeScript, Vite stack'
