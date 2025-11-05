@@ -1,13 +1,22 @@
-import { Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
+import {
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
 
 import { Event } from '../types';
-import { formatDate, formatMonth, getEventsForDay, getWeeksAtMonth } from '../utils/dateUtils';
 import { EventBox } from './EventBox';
+import { formatDate, formatMonth, getEventsForDay, getWeeksAtMonth } from '../utils/dateUtils';
 
 interface MonthViewCalendarProps {
   currentDate: Date;
   filteredEvents: Event[];
-  notifiedEvents: number[];
+  notifiedEvents: string[];
   holidays: Record<string, string>;
   weekDays: string[];
 }
@@ -68,7 +77,9 @@ export function MonthViewCalendar({
                           {getEventsForDay(filteredEvents, day).map((event) => {
                             const isNotified = notifiedEvents.includes(event.id);
 
-                            return <EventBox key={event.id} event={event} isNotified={isNotified} />;
+                            return (
+                              <EventBox key={event.id} event={event} isNotified={isNotified} />
+                            );
                           })}
                         </>
                       )}

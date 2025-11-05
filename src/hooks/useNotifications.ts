@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { Event } from '../types';
 import { createNotificationMessage, getUpcomingEvents } from '../utils/notificationUtils';
 
+const CHECK_INTERVAL = 1000;
+
 export const useNotifications = (events: Event[]) => {
   const [notifications, setNotifications] = useState<{ id: string; message: string }[]>([]);
   const [notifiedEvents, setNotifiedEvents] = useState<string[]>([]);
@@ -27,7 +29,7 @@ export const useNotifications = (events: Event[]) => {
   };
 
   useEffect(() => {
-    const interval = setInterval(checkUpcomingEvents, 1000); // 1초마다 체크
+    const interval = setInterval(checkUpcomingEvents, CHECK_INTERVAL);
     return () => clearInterval(interval);
   }, [events, notifiedEvents]);
 

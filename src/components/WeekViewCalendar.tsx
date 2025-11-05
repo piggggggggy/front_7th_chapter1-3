@@ -1,13 +1,22 @@
-import { Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
+import {
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
 
 import { Event } from '../types';
-import { formatWeek, getWeekDates } from '../utils/dateUtils';
 import { EventBox } from './EventBox';
+import { formatWeek, getWeekDates } from '../utils/dateUtils';
 
 interface WeekViewCalendarProps {
   currentDate: Date;
   filteredEvents: Event[];
-  notifiedEvents: number[];
+  notifiedEvents: string[];
   weekDays: string[];
 }
 

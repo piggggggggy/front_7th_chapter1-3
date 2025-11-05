@@ -7,7 +7,7 @@ interface EventListProps {
   filteredEvents: Event[];
   searchTerm: string;
   onSearchChange: (term: string) => void;
-  notifiedEvents: number[];
+  notifiedEvents: string[];
   notificationOptions: Array<{ value: number; label: string }>;
   onEdit: (event: Event) => void;
   onDelete: (event: Event) => void;

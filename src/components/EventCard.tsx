@@ -34,7 +34,10 @@ export function EventCard({
                 <Repeat fontSize="small" />
               </Tooltip>
             )}
-            <Typography fontWeight={isNotified ? 'bold' : 'normal'} color={isNotified ? 'error' : 'inherit'}>
+            <Typography
+              fontWeight={isNotified ? 'bold' : 'normal'}
+              color={isNotified ? 'error' : 'inherit'}
+            >
               {event.title}
             </Typography>
           </Stack>
@@ -57,7 +60,8 @@ export function EventCard({
             </Typography>
           )}
           <Typography>
-            알림: {notificationOptions.find((option) => option.value === event.notificationTime)?.label}
+            알림:{' '}
+            {notificationOptions.find((option) => option.value === event.notificationTime)?.label}
           </Typography>
         </Stack>
         <Stack>
