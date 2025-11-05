@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, DragEvent } from 'react';
 
 import { Event } from '../types';
 
@@ -58,33 +58,33 @@ export interface DragAndDropHandlers {
    * @param event - React drag event
    * @param eventData - Event data being dragged
    */
-  handleDragStart: (event: React.DragEvent<HTMLDivElement>, eventData: Event) => void;
+  handleDragStart: (event: DragEvent<HTMLElement>, eventData: Event) => void;
 
   /**
    * Handler for drag end event on EventBox
    * @param event - React drag event
    */
-  handleDragEnd: (event: React.DragEvent<HTMLDivElement>) => void;
+  handleDragEnd: (event: DragEvent<HTMLElement>) => void;
 
   /**
    * Handler for drag over event on TableCell (drop zone)
    * Prevents default to enable drop
    * @param event - React drag event
    */
-  handleDragOver: (event: React.DragEvent<HTMLTableCellElement>) => void;
+  handleDragOver: (event: DragEvent<HTMLElement>) => void;
 
   /**
    * Handler for drag leave event on TableCell (drop zone)
    * @param event - React drag event
    */
-  handleDragLeave: (event: React.DragEvent<HTMLTableCellElement>) => void;
+  handleDragLeave: (event: DragEvent<HTMLElement>) => void;
 
   /**
    * Handler for drop event on TableCell
    * @param event - React drag event
    * @param targetDate - Date of the cell where event was dropped
    */
-  handleDrop: (event: React.DragEvent<HTMLTableCellElement>, targetDate: Date) => Promise<void>;
+  handleDrop: (event: DragEvent<HTMLElement>, targetDate: Date) => Promise<void>;
 
   /**
    * State indicating if an event is currently being dragged
@@ -118,7 +118,7 @@ export interface DragAndDropHandlers {
 export function useDragAndDrop(params: UseDragAndDropParams): DragAndDropHandlers {
   const [isDragging, setIsDragging] = useState(false);
 
-  const handleDragStart = (event: React.DragEvent<HTMLDivElement>, eventData: Event): void => {
+  const handleDragStart = (event: DragEvent<HTMLElement>, eventData: Event): void => {
     // Store event data in dataTransfer as JSON
     event.dataTransfer.setData(DRAG_DATA_FORMAT, JSON.stringify(eventData));
     event.dataTransfer.effectAllowed = 'move';
@@ -127,25 +127,22 @@ export function useDragAndDrop(params: UseDragAndDropParams): DragAndDropHandler
     setIsDragging(true);
   };
 
-  const handleDragEnd = (event: React.DragEvent<HTMLDivElement>): void => {
+  const handleDragEnd = (event: DragEvent<HTMLElement>): void => {
     // Reset dragging state
     setIsDragging(false);
   };
 
-  const handleDragOver = (event: React.DragEvent<HTMLTableCellElement>): void => {
+  const handleDragOver = (event: DragEvent<HTMLElement>): void => {
     // Prevent default to enable drop
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDragLeave = (event: React.DragEvent<HTMLTableCellElement>): void => {
+  const handleDragLeave = (event: DragEvent<HTMLElement>): void => {
     // No-op for now - visual feedback can be added later if needed
   };
 
-  const handleDrop = async (
-    event: React.DragEvent<HTMLTableCellElement>,
-    targetDate: Date
-  ): Promise<void> => {
+  const handleDrop = async (event: DragEvent<HTMLElement>, targetDate: Date): Promise<void> => {
     // Prevent default browser behavior
     event.preventDefault();
 

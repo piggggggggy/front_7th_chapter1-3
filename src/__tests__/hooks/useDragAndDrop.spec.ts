@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { DragEvent } from 'react';
+import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 
 import { useDragAndDrop } from '../../hooks/useDragAndDrop';
 import { Event } from '../../types';
@@ -40,7 +41,7 @@ const createDragEvent = (type: string) => {
       effectAllowed: 'move',
       dropEffect: 'move',
     },
-  } as unknown as React.DragEvent;
+  } as unknown as DragEvent<HTMLDivElement>;
 };
 
 describe('useDragAndDrop', () => {
@@ -147,7 +148,7 @@ describe('useDragAndDrop', () => {
         repeat: { type: 'none', interval: 0 },
       });
       const dragEvent = createDragEvent('drop');
-      dragEvent.dataTransfer.getData.mockReturnValue(JSON.stringify(mockEvent));
+      (dragEvent.dataTransfer.getData as Mock).mockReturnValue(JSON.stringify(mockEvent));
 
       await act(async () => {
         result.current.handleDrop(dragEvent, new Date('2025-10-20'));
@@ -166,7 +167,7 @@ describe('useDragAndDrop', () => {
 
       const mockEvent = createMockEvent({ date: '2025-10-15' });
       const dragEvent = createDragEvent('drop');
-      dragEvent.dataTransfer.getData.mockReturnValue(JSON.stringify(mockEvent));
+      (dragEvent.dataTransfer.getData as Mock).mockReturnValue(JSON.stringify(mockEvent));
 
       await act(async () => {
         result.current.handleDrop(dragEvent, new Date('2025-10-15'));
@@ -185,7 +186,7 @@ describe('useDragAndDrop', () => {
 
       const mockEvent = createMockEvent();
       const dragEvent = createDragEvent('drop');
-      dragEvent.dataTransfer.getData.mockReturnValue(JSON.stringify(mockEvent));
+      (dragEvent.dataTransfer.getData as Mock).mockReturnValue(JSON.stringify(mockEvent));
 
       await act(async () => {
         result.current.handleDrop(dragEvent, new Date('2025-10-20'));
@@ -209,7 +210,7 @@ describe('useDragAndDrop', () => {
         repeat: { type: 'weekly', interval: 1 },
       });
       const dragEvent = createDragEvent('drop');
-      dragEvent.dataTransfer.getData.mockReturnValue(JSON.stringify(mockEvent));
+      (dragEvent.dataTransfer.getData as Mock).mockReturnValue(JSON.stringify(mockEvent));
 
       await act(async () => {
         result.current.handleDrop(dragEvent, new Date('2025-10-20'));
@@ -230,7 +231,7 @@ describe('useDragAndDrop', () => {
         repeat: { type: 'daily', interval: 1 },
       });
       const dragEvent = createDragEvent('drop');
-      dragEvent.dataTransfer.getData.mockReturnValue(JSON.stringify(mockEvent));
+      (dragEvent.dataTransfer.getData as Mock).mockReturnValue(JSON.stringify(mockEvent));
 
       await act(async () => {
         result.current.handleDrop(dragEvent, new Date('2025-10-20'));
@@ -273,7 +274,9 @@ describe('useDragAndDrop', () => {
       });
       const dragStartEvent = createDragEvent('dragstart');
       const dragEvent = createDragEvent('drop');
-      dragEvent.dataTransfer.getData.mockReturnValue(JSON.stringify(mockEvent));
+      (dragEvent.dataTransfer.getData as unknown as Mock).mockReturnValue(
+        JSON.stringify(mockEvent)
+      );
 
       act(() => {
         result.current.handleDragStart(dragStartEvent, mockEvent);
@@ -303,7 +306,7 @@ describe('useDragAndDrop', () => {
       );
 
       const dragEvent = createDragEvent('drop');
-      dragEvent.dataTransfer.getData.mockReturnValue('invalid json');
+      (dragEvent.dataTransfer.getData as Mock).mockReturnValue('invalid json');
 
       await act(async () => {
         result.current.handleDrop(dragEvent, new Date('2025-10-20'));
