@@ -421,17 +421,15 @@ function processRequest(request) {
 ✓ All tests pass before starting
 ✓ All tests pass after each change
 ✓ Small, incremental changes
-✓ Commit after each successful refactor
 ✓ Performance benchmarks maintained
 ✓ Behavior unchanged
 
 ### Refactoring Rules
 
 1. **Don't change behavior**: Only structure
-2. **One thing at a time**: Single refactoring per commit
-3. **Test constantly**: Run tests after each change
-4. **Keep it working**: Never break the build
-5. **Document why**: Explain non-obvious changes
+2. **Test constantly**: Run tests after each change
+3. **Keep it working**: Never break the build
+4. **Document why**: Explain non-obvious changes
 
 ---
 

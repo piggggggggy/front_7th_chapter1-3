@@ -1,0 +1,676 @@
+# Component Extraction Workflow v1.0 - Code-Level Refactoring
+# ============================================================================
+# Philosophy: Split monolithic files into maintainable components
+# ============================================================================
+
+name: component-extraction
+version: '1.0-LEAN'
+description: Extract React/Vue components from monolithic files to reduce size and improve maintainability
+philosophy: 'Small components enable maintainability'
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Context Requirements (What orchestrator needs to start)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+context:
+  required:
+    - target_file: string # Monolithic file to extract from (e.g., src/App.tsx)
+    - project_id: string # CE-XXX format (Component Extraction)
+
+  optional:
+    - extraction_targets: array # Specific components/functions to extract (e.g., ['CalendarView', 'EventForm'])
+    - target_size: number # Goal: reduce to N lines (e.g., 200)
+    - target_directory: string # Where to put extracted components (default: same directory)
+    - complexity_hint: enum[simple, standard]
+
+  prerequisites:
+    verify:
+      - file_exists: '{{target_file}}'
+      - tests_exist: true # Must have tests
+      - tests_passing: true # All tests must pass before extraction
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Routing (2-tier system for component extraction)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+routing:
+  detection:
+    simple:
+      signals: ['< 500 lines', '1-3 components to extract', 'clear component boundaries']
+      scope: '1-3 component extractions'
+      focus: 'Extract obvious, isolated components'
+      time_estimate: '30-45 minutes'
+
+    standard:
+      signals: ['500-1000 lines', '4-8 components to extract', 'some coupling', 'shared state']
+      scope: '4-8 component extractions'
+      focus: 'Extract components with dependencies and shared logic'
+      time_estimate: '45-90 minutes'
+
+  routes:
+    simple:
+      agents: [architect, refactor]
+      phases: [analysis, extraction]
+      outputs: 2
+      checkpoints: []
+
+    standard:
+      agents: [architect, refactor, qa]
+      phases: [analysis, extraction, verification]
+      outputs: 3
+      checkpoints: [extraction.after]
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Phases (Lightweight 2-3 phase structure)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+phases:
+  # ──────────────────────────────────────────────────────────────────────────
+  # PHASE 1: ANALYSIS - Identify extractable components
+  # ──────────────────────────────────────────────────────────────────────────
+  analysis:
+    agent: architect
+
+    tasks:
+      - id: unified_extraction_analysis
+        prompt: |
+          Project: {{project_id}}
+          Target: {{target_file}}
+          Route: {{route}}
+
+          **STEP 1: Understand Monolithic File**
+          - Use Read to analyze {{target_file}}
+          - Identify: File size? Component structure? Render functions? JSX blocks?
+          - Map: Component boundaries, dependencies, shared state, props flow
+          - Locate test files (use Glob for pattern: **/*.test.*, **/*.spec.*)
+
+          **STEP 2: Component Extraction Analysis**
+
+          Create SINGLE analysis document with:
+
+          1. Monolithic File Assessment
+             - File size: {{current_lines}} lines
+             - Main component: {{main_component_name}}
+             - Render functions identified (list with line ranges)
+             - JSX blocks identified (inline JSX that could be components)
+             - State management patterns (useState, useReducer, props)
+             - Side effects (useEffect, event handlers)
+             - Complexity: cyclomatic complexity score
+
+          2. Extractable Components Identified
+             - Component name: {{name}}
+               - Type: [render function | JSX block | logical group]
+               - Lines: {{start_line}}-{{end_line}} ({{line_count}} lines)
+               - Dependencies: [props, state, handlers, hooks]
+               - Coupling: [low | medium | high]
+               - Extraction difficulty: [easy | moderate | complex]
+             - (Repeat for each component)
+             - Total components found: {{count}}
+
+          3. Extraction Strategy
+             - Extraction order (least coupled first)
+             - Component 1: {{name}} (reason: isolated, no dependencies)
+             - Component 2: {{name}} (reason: depends only on Component 1)
+             - Component 3: {{name}} (reason: shared state handled via props)
+             - Target directory: {{target_directory}} (default: same as source file)
+             - Naming convention: PascalCase for components
+             - File naming: {{ComponentName}}.tsx
+
+          4. Dependency Management Plan
+             - Shared state: how to pass between components (props, context, custom hooks)
+             - Shared handlers: extract to parent or custom hook
+             - Shared types: extract to types file if needed
+             - Import updates: list all files that import {{target_file}}
+
+          5. Risk Assessment
+             - High risk extractions: (complex dependencies, shared state)
+             - Medium risk: (some coupling, multiple props)
+             - Low risk: (isolated, clear boundaries)
+             - Mitigation: extract low risk first, test continuously
+
+          6. Expected Outcome
+             - Original file size: {{current_lines}} lines → Target: {{target_size}} lines
+             - New component files: {{count}} files
+             - Test changes needed: [none | update imports | add new tests]
+             - Estimated reduction: {{percentage}}%
+
+          7. Handoff Summary (3 lines max)
+
+          Depth: {{route}}
+
+          Focus: Code extraction from {{target_file}}
+          Scope: {{extraction_targets}} or auto-detected components
+
+          Output to: 01_extraction-analysis.md
+        output: 01_extraction-analysis.md
+
+    gates:
+      - check: file_exists(01_extraction-analysis.md)
+      - check: contains(01_extraction-analysis.md, "Extractable Components Identified")
+      - check: contains(01_extraction-analysis.md, "Extraction Strategy")
+      - check: test_passes # Verify tests still pass
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # PHASE 2: EXTRACTION - Extract components one by one
+  # ──────────────────────────────────────────────────────────────────────────
+  extraction:
+    agent: refactor
+    inputs: [analysis.outputs]
+
+    tasks:
+      - id: unified_extraction
+        prompt: |
+          Based on: 01_extraction-analysis.md → Extraction Strategy
+
+          Route: {{route}}
+          Source: {{target_file}}
+          Target directory: {{target_directory}}
+
+          Create SINGLE extraction log document with:
+
+          1. Pre-Extraction State
+             - Git backup created: ✅
+             - Original file size: {{lines}} lines
+             - Test baseline: ✅ all passing
+             - Components to extract: {{count}}
+
+          2. Component Extractions (executed incrementally)
+
+             For EACH component (ONE AT A TIME):
+
+             **Component: {{ComponentName}}**
+             - Source lines: {{start}}-{{end}} ({{count}} lines)
+             - Target file: {{target_directory}}/{{ComponentName}}.tsx
+
+             Extraction steps:
+             a) Create new file: {{ComponentName}}.tsx
+             b) Copy component code from {{target_file}}
+             c) Add necessary imports (React, types, utilities)
+             d) Export component (named or default)
+             e) Update {{target_file}}: remove extracted code
+             f) Update {{target_file}}: add import for {{ComponentName}}
+             g) Update {{target_file}}: use <{{ComponentName}} /> instead
+             h) Update prop dependencies (pass state/handlers as props)
+
+             Test after extraction:
+             - Run: npm test
+             - Status: ✅ PASSING
+             - If FAIL: ❌ Rollback and analyze issue
+
+             Commit:
+             - Message: "refactor({{project_id}}): extract {{ComponentName}} component"
+             - Files: {{ComponentName}}.tsx, {{target_file}}
+
+             (Repeat for each component in extraction order)
+
+          3. Import Updates
+             - Files importing {{target_file}}: {{list}}
+             - Update strategy: (if components are re-exported vs direct imports)
+             - Updated imports in: {{files}}
+             - Test status: ✅ verified
+
+          4. Final State
+             - Original file size: {{original_lines}} → {{final_lines}} lines ({{reduction}}% reduction)
+             - Components extracted: {{count}}
+             - New files created: {{list}}
+             - All tests: ✅ PASSING
+             - Build status: ✅ successful
+             - Type check: ✅ no errors
+
+          5. Extraction Summary
+             - Total extractions: {{count}}
+             - Successful: {{success_count}}
+             - Rolled back: {{rollback_count}}
+             - File size reduction: {{original_lines}} → {{final_lines}} ({{percentage}}%)
+             - Tests: maintained {{test_count}} tests, all passing
+             - Commits: {{commit_count}}
+
+          6. Handoff Summary (3 lines max)
+
+          Depth: {{route}}
+
+          Safety Rules:
+          - Extract ONE component at a time
+          - Run tests after EACH extraction
+          - Commit after EACH successful extraction
+          - Rollback immediately on any test failure
+          - Stop if file size target reached
+
+          Output to: 02_extraction-log.md
+        output: 02_extraction-log.md
+
+      - id: apply_extractions
+        prompt: |
+          Based on: 02_extraction-log.md (extraction plan)
+
+          Apply component extractions from: {{target_file}}
+
+          Guidelines:
+          - ONE component extraction at a time
+          - Create new component file
+          - Update source file (remove code, add import)
+          - Pass dependencies as props
+          - Run tests immediately after EACH extraction
+          - Commit if tests pass, rollback if fail
+          - Update component documentation inline
+          - Preserve all functionality exactly
+
+          Safety: Tests must stay GREEN after EACH extraction
+
+          Target reduction: {{target_size}} lines or {{percentage}}% reduction
+        outputs:
+          - {{target_file}} # Reduced monolithic file
+          - new_component_files # Array of extracted components
+
+    gates:
+      - check: file_exists(02_extraction-log.md)
+      - check: test_passes # Non-negotiable
+      - check: contains(02_extraction-log.md, "All tests: ✅ PASSING")
+      - check: file_size_reduced({{target_file}})
+      - check: new_files_created
+      - check: no_type_errors
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # PHASE 3: VERIFICATION - Validate extractions (standard route only)
+  # ──────────────────────────────────────────────────────────────────────────
+  verification:
+    agent: qa
+    skip_if: route.simple
+    inputs: [analysis.outputs, extraction.outputs]
+
+    tasks:
+      - id: unified_verification
+        prompt: |
+          Based on:
+          - Analysis: 01_extraction-analysis.md
+          - Extractions: 02_extraction-log.md
+          - Source: {{target_file}}
+          - New components: extracted component files
+
+          Create SINGLE verification document with:
+
+          1. Extraction Verification
+             - Original file size: {{original}} → {{final}} lines ({{reduction}}%)
+             - Target achieved: {{target_size}} lines ({{achieved}})
+             - Components extracted: {{count}}
+             - All files created: ✅
+             - Naming conventions: ✅ consistent
+             - File locations: ✅ correct
+
+          2. Functionality Verification
+             - Run full test suite
+             - All tests passing: ✅ {{test_count}}
+             - No regressions detected: ✅
+             - Build successful: ✅
+             - Type check: ✅ no errors
+             - Linting: ✅ passing
+
+          3. Code Quality Check
+             - Component boundaries: ✅ clear
+             - Prop dependencies: ✅ minimal and explicit
+             - State management: ✅ appropriate level
+             - Reusability: ✅ components are reusable
+             - Complexity: reduced ({{before}} → {{after}})
+             - Maintainability: ✅ improved
+
+          4. Integration Verification
+             - Imports updated correctly: ✅
+             - Component composition working: ✅
+             - Props flow correctly: ✅
+             - Event handlers working: ✅
+             - Side effects preserved: ✅
+             - Dev server: ✅ runs without errors
+
+          5. Quality Summary
+             - Extraction goals achieved: ✅
+             - File size target: {{achieved}}
+             - Maintainability: ✅ improved
+             - Test coverage: maintained {{coverage}}%
+             - Remaining opportunities: {{list}}
+
+          6. Handoff Summary (3 lines max)
+
+          Depth: {{route}}
+
+          Output to: 03_extraction-verification.md
+        output: 03_extraction-verification.md
+
+    gates:
+      - check: file_exists(03_extraction-verification.md)
+      - check: test_passes
+      - check: build_succeeds
+      - check: contains(03_extraction-verification.md, "Quality Summary")
+      - check: target_size_achieved_or_explained
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Validation Gates (Ensuring safe extraction)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+gates:
+  types:
+    test_passes:
+      check: 'exit_code == 0'
+      command: 'npm test'
+      required: true
+      frequency: 'after_each_extraction'
+
+    build_succeeds:
+      check: 'exit_code == 0'
+      command: 'npm run build'
+      required: true
+
+    file_exists:
+      check: 'path.exists()'
+      required: true
+
+    contains:
+      check: 'file.includes(text)'
+      required: true
+
+    file_size_reduced:
+      check: 'file_size_after < file_size_before'
+      required: true
+
+    new_files_created:
+      check: 'extracted_component_files.length > 0'
+      required: true
+
+    no_type_errors:
+      check: 'tsc --noEmit exits 0'
+      required: true
+
+    target_size_achieved_or_explained:
+      check: 'final_size <= target_size OR explanation_provided'
+      required: false # Warning if not achieved
+
+  continuous: # Check after every extraction
+    - name: tests_still_passing
+      check: test_passes
+      action_on_fail: rollback_last_extraction
+
+    - name: no_type_errors
+      check: build_succeeds
+      action_on_fail: fix_types_and_retry
+
+  recovery:
+    test_fails: 'rollback_last_extraction'
+    type_errors: 'fix_imports_and_types'
+    import_errors: 'fix_import_paths'
+    build_fails: 'rollback_and_investigate'
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Safety Rules (Non-negotiable principles)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+safety:
+  golden_rules:
+    1: 'Tests must stay GREEN'
+    2: 'Extract ONE component at a time'
+    3: 'Run tests after EACH extraction'
+    4: 'Commit after EACH successful extraction'
+    5: 'Preserve behavior exactly - no functional changes'
+
+  safe_extractions: # Low risk
+    - 'Isolated render functions'
+    - 'Pure JSX blocks with no state'
+    - 'Presentational components'
+    - 'Components with clear prop boundaries'
+
+  risky_extractions: # Higher risk, need extra care
+    - 'Components with shared state'
+    - 'Components with side effects (useEffect)'
+    - 'Components with event handlers accessing parent state'
+    - 'Tightly coupled components'
+    - 'Components with complex prop drilling'
+
+  rollback_triggers:
+    - 'Any test fails'
+    - 'Type errors'
+    - 'Import errors'
+    - 'Build fails'
+    - 'Runtime errors in dev'
+    - 'Infinite re-renders'
+
+  commit_strategy:
+    frequency: 'after_each_successful_extraction'
+    message_format: 'refactor({{project_id}}): extract {{ComponentName}} component'
+    verify_before_commit: 'run_tests_and_build'
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Output Structure (Where files go)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+outputs:
+  directory: '.ai-output/features/{{project_id}}/'
+  code_directory: '{{target_directory}}'
+
+  structure:
+    simple_route: # 2 docs + extracted components
+      - 01_extraction-analysis.md
+      - 02_extraction-log.md
+      - {{target_file}} # Reduced monolithic file
+      - new_components/ # Extracted component files
+
+    standard_route: # 3 docs + extracted components
+      - 01_extraction-analysis.md
+      - 02_extraction-log.md
+      - 03_extraction-verification.md
+      - {{target_file}} # Reduced monolithic file
+      - new_components/ # Extracted component files
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Orchestrator Instructions (How to execute this workflow)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+orchestration:
+  role: 'Coordinator ONLY - delegate ALL work via Task tool'
+
+  pre_flight:
+    - verify: 'target_file exists and is accessible'
+    - verify: 'tests exist and are passing (delegate to agent to verify)'
+    - verify: 'Node.js 22.x is active (agent will handle nvm use 22)'
+    - create: 'git backup branch'
+    - detect: 'route based on file size and complexity_hint'
+
+  execution_pattern:
+    analysis_phase:
+      invoke: "Task(subagent_type='architect', prompt='Analyze {{target_file}} for component extraction. Use Read to understand structure. Identify extractable components (render functions, JSX blocks). Plan extraction order (least coupled first). Create 01_extraction-analysis.md. Verify tests pass. Report: analysis complete, components identified, extraction strategy ready.')"
+      on_completion: "Record agent's reported outputs in state.json"
+      on_fail: "Re-invoke architect with specific feedback"
+
+    extraction_phase:
+      invoke: "Task(subagent_type='refactor', prompt='Extract components from {{target_file}} based on 01_extraction-analysis.md. Extract ONE at a time, test after EACH, commit after EACH success. Create 02_extraction-log.md. Report: extractions applied, test status, commits made, file size reduction achieved.')"
+      on_completion: "Record agent's reported outputs in state.json"
+      on_fail: "Re-invoke refactor with rollback instruction"
+
+    verification_phase:
+      skip_if: "route.simple"
+      invoke: "Task(subagent_type='qa', prompt='Verify component extractions from {{target_file}}. Check tests, build, types, functionality preserved. Create 03_extraction-verification.md. Report: verification complete, quality summary, target size achieved.')"
+      on_completion: "Record workflow complete in state.json"
+      on_fail: "Re-invoke qa with specific feedback"
+
+  forbidden:
+    - "Read implementation files (delegate to agents)"
+    - "Validate file contents (trust agent reports)"
+    - "Create .md files yourself (use Task tool)"
+    - "Run tests yourself (delegate to agents)"
+    - "Decide WHAT to extract (that's architect's job)"
+    - "Perform extractions (that's refactor agent's job)"
+
+  validation_strategy:
+    approach: trust_and_track
+    agent_responsibility: "Agents verify their own outputs and report status"
+    orchestrator_responsibility: "Record agent reports and continue workflow"
+    on_agent_failure: "Re-invoke agent with specific feedback"
+
+  error_handling:
+    retry_limit: 2
+    retry_on: [minor_issues, transient_failures]
+    rollback_on: [test_failure, type_errors, import_errors, build_failure]
+    abort_on: [prerequisite_missing, target_file_missing, tests_failing_before_start]
+    fallback: 'restore_backup_and_escalate'
+
+  safety_measures:
+    - 'Create git backup before starting'
+    - 'Agent extracts one component at a time'
+    - 'Agent runs tests after each extraction'
+    - 'Agent commits after each successful extraction'
+    - 'Agent handles rollback on failures'
+
+  state_tracking:
+    save: '.ai-output/workflows/state/{{project_id}}_component-extraction.json'
+    includes: [phase_status, outputs, metrics, extractions_applied, commits, rollbacks]
+
+  completion_summary:
+    template: |
+      ✅ Component Extraction Complete: {{project_id}}
+
+      **Route**: {{route}}
+      **Source**: {{target_file}}
+      **Duration**: {{total_duration}}
+
+      📊 Results:
+      - File size: {{original_lines}} → {{final_lines}} lines ({{reduction}}% reduction)
+      - Components extracted: {{extraction_count}}
+      - New files created: {{new_file_count}}
+      - Tests: {{test_count}} passing 🟢
+      - Build: ✅ successful
+
+      🔧 Extractions Applied:
+      {{#each extractions}}
+      - {{ComponentName}} ({{line_count}} lines) → {{file_path}}
+      {{/each}}
+
+      ✅ Safety Checks:
+      - Tests: all passing 🟢
+      - Types: no errors ✅
+      - Build: successful ✅
+      - Commits: {{commit_count}}
+      - Rollbacks: {{rollback_count}}
+
+      📁 Outputs:
+      {{#each outputs}}
+      - {{this}}
+      {{/each}}
+
+      **Status**: Monolithic file split into maintainable components
+
+      **Next Steps**: Continue development, extract more if needed, or refactor extracted components
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Refactor Types (Specific focus areas)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+refactor_types:
+  monolith-split:
+    focus:
+      - 'Extract render functions into separate components'
+      - 'Split inline JSX blocks into reusable components'
+      - 'Reduce file size for readability and maintainability'
+      - 'Maintain exact behavior - no functional changes'
+      - 'Improve component composition and reusability'
+
+  extraction_patterns:
+    render_function:
+      example: 'const CalendarView = () => { ... } within App component'
+      strategy: 'Extract entire function to new file, import and use'
+
+    jsx_block:
+      example: 'Large JSX block within render (e.g., <div>...</div> with 50+ lines)'
+      strategy: 'Extract to component, pass necessary props'
+
+    logical_group:
+      example: 'Related state + handlers + JSX (e.g., form logic)'
+      strategy: 'Extract state/handlers to custom hook OR extract component with internal state'
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Metrics & Targets
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+metrics:
+  track:
+    - original_file_size # Lines of code
+    - final_file_size # Lines of code after extraction
+    - file_size_reduction # Percentage
+    - components_extracted # Count
+    - new_files_created # Count
+    - test_pass_rate # Must be 100%
+    - commits_made
+    - rollbacks_needed # Target: 0
+
+  targets:
+    file_size_reduction: '> 40%' # Meaningful reduction
+    test_pass_rate: '100%' # Non-negotiable
+    build_success: 'true' # Non-negotiable
+    type_errors: '0' # Non-negotiable
+    components_extracted: '>= 3' # Minimum to be worthwhile
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Metadata
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+meta:
+  version: '1.0.0'
+  architecture: 'lean'
+  last_updated: '2025-11-05'
+
+  workflow:
+    execution_model:
+      type: orchestrated
+      orchestrator_role: coordination_only
+      agent_execution: manual # Agents run via CLI
+
+  philosophy:
+    - 'Small components enable maintainability'
+    - 'Tests must stay GREEN always'
+    - 'Extract one component at a time'
+    - 'Test after each extraction'
+    - 'Preserve behavior exactly'
+
+  principles:
+    - 'Safety first: tests and build must pass'
+    - 'One extraction at a time'
+    - 'Incremental with continuous validation'
+    - 'Commit frequently, rollback fearlessly'
+    - 'Know when file is small enough'
+
+  compatible_with:
+    orchestrator: '>= 1.0'
+    agents:
+      - architect: '>= 2.0'
+      - refactor: '>= 2.0'
+      - qa: '>= 2.0'
+
+    frameworks:
+      - React: '>= 16.8'
+      - Vue: '>= 3.0'
+      - TypeScript: '>= 4.0'
+      - Vite: '>= 4.0'
+
+  related_workflows:
+    - spa-refactor # Folder organization AFTER component extraction
+    - tdd-refactor # Code quality improvements AFTER extraction
+
+  metrics_by_route:
+    simple:
+      time: '30-45 minutes'
+      files: 2 # analysis + log
+      tokens: '~2,000'
+      scope: '1-3 component extractions'
+      file_size: '< 500 lines'
+
+    standard:
+      time: '45-90 minutes'
+      files: 3 # analysis + log + verification
+      tokens: '~3,500'
+      scope: '4-8 component extractions'
+      file_size: '500-1000 lines'
+
+  differences_from_spa_refactor:
+    focus: 'Code splitting (not folder organization)'
+    input: 'Single monolithic file (not directory tree)'
+    output: 'New component files extracted (not moved files)'
+    scope: 'Lines of code (not number of files)'
+    risk: 'Higher (changing code vs moving files)'
+    scale: 'File-level (not project-level)'
+    goal: 'Reduce file size (not reorganize structure)'
+
+  changelog:
+    v1.0:
+      - 'Initial component extraction workflow'
+      - 'Lightweight 2-3 phase design (300-400 lines vs 676 for spa-refactor)'
+      - '2-tier routing (simple/standard)'
+      - 'Focus on code-level extraction, not folder reorganization'
+      - 'One component at a time with continuous testing'
+      - 'Compatible with React, Vue, TypeScript, Vite stack'
+      - 'No git commits per user preference'
