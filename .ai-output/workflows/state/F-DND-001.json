@@ -1,0 +1,59 @@
+{
+  "featureId": "F-DND-001",
+  "workflow": "tdd-setup",
+  "version": "3.0-LEAN",
+  "route": "simple",
+  "status": "completed",
+  "timestamp": "2025-11-06T01:27:30Z",
+  "phases": {
+    "analyst": {
+      "status": "completed",
+      "agent": "analyst",
+      "outputs": [
+        ".ai-output/features/F-DND-001/01_analysis.md"
+      ],
+      "duration": "~2 minutes"
+    },
+    "architect": {
+      "status": "completed",
+      "agent": "architect",
+      "outputs": [
+        ".ai-output/features/F-DND-001/03_design.md",
+        "src/hooks/useDragAndDrop.ts"
+      ],
+      "duration": "~3 minutes"
+    },
+    "qa": {
+      "status": "completed",
+      "agent": "qa",
+      "outputs": [
+        ".ai-output/features/F-DND-001/04_test-plan.md",
+        "src/__tests__/hooks/useDragAndDrop.spec.ts"
+      ],
+      "duration": "~3 minutes"
+    }
+  },
+  "metrics": {
+    "total_duration": "~8 minutes",
+    "agents_count": 3,
+    "files_created": 5,
+    "test_count": 12,
+    "test_status": "RED",
+    "tests_failing": 11,
+    "tests_passing": 1
+  },
+  "outputs": [
+    ".ai-output/features/F-DND-001/01_analysis.md",
+    ".ai-output/features/F-DND-001/03_design.md",
+    ".ai-output/features/F-DND-001/04_test-plan.md",
+    "src/hooks/useDragAndDrop.ts",
+    "src/__tests__/hooks/useDragAndDrop.spec.ts"
+  ],
+  "next_steps": [
+    "Run tdd-implement workflow to enter GREEN phase",
+    "Implement useDragAndDrop hook handlers",
+    "Add draggable props to EventBox",
+    "Add drop handlers to calendar views",
+    "Wire up in App.tsx"
+  ]
+}
