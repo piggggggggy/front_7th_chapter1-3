@@ -55,6 +55,7 @@ import {
   getWeeksAtMonth,
 } from './utils/dateUtils.ts';
 import { findOverlappingEvents } from './utils/eventOverlap.ts';
+import { isRecurringEvent } from './utils/eventUtils.ts';
 import { getRepeatTypeLabel } from './utils/repeatUtils.ts';
 import { getTimeErrorMessage } from './utils/timeValidation.ts';
 
@@ -172,10 +173,6 @@ function App() {
       setIsRecurringDialogOpen(false);
       setPendingRecurringDelete(null);
     }
-  };
-
-  const isRecurringEvent = (event: Event): boolean => {
-    return event.repeat.type !== 'none' && event.repeat.interval > 0;
   };
 
   const handleEditEvent = (event: Event) => {

@@ -56,3 +56,7 @@ export function getFilteredEvents(
 
   return searchedEvents;
 }
+
+export function isRecurringEvent(event: Event): boolean {
+  return event.repeat.type !== 'none' && event.repeat.interval > 0;
+}
