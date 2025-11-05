@@ -41,6 +41,7 @@ import { useState } from 'react';
 import { CalendarHeader } from './components/CalendarHeader.tsx';
 import { EventBox } from './components/EventBox.tsx';
 import { EventCard } from './components/EventCard.tsx';
+import { EventList } from './components/EventList.tsx';
 import { MonthViewCalendar } from './components/MonthViewCalendar.tsx';
 import { NotificationAlerts } from './components/NotificationAlerts.tsx';
 import RecurringEventDialog from './components/RecurringEventDialog.tsx';
@@ -476,37 +477,15 @@ function App() {
           )}
         </Stack>
 
-        <Stack
-          data-testid="event-list"
-          spacing={2}
-          sx={{ width: '30%', height: '100%', overflowY: 'auto' }}
-        >
-          <FormControl fullWidth>
-            <FormLabel htmlFor="search">일정 검색</FormLabel>
-            <TextField
-              id="search"
-              size="small"
-              placeholder="검색어를 입력하세요"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </FormControl>
-
-          {filteredEvents.length === 0 ? (
-            <Typography>검색 결과가 없습니다.</Typography>
-          ) : (
-            filteredEvents.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                isNotified={notifiedEvents.includes(event.id)}
-                notificationOptions={notificationOptions}
-                onEdit={handleEditEvent}
-                onDelete={handleDeleteEvent}
-              />
-            ))
-          )}
-        </Stack>
+        <EventList
+          filteredEvents={filteredEvents}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          notifiedEvents={notifiedEvents}
+          notificationOptions={notificationOptions}
+          onEdit={handleEditEvent}
+          onDelete={handleDeleteEvent}
+        />
       </Stack>
 
       <Dialog open={isOverlapDialogOpen} onClose={() => setIsOverlapDialogOpen(false)}>
