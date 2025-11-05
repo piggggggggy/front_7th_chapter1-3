@@ -1,0 +1,100 @@
+{
+  "workflow": "spa_refactor",
+  "projectId": "COMPONENT-1",
+  "phase": "analysis",
+  "scope_path": "/Users/Dev/plus-fe/front_7th_chapter1-3/src/",
+  "refactor_type": "components",
+
+  "pre_flight_tasks": [
+    {
+      "id": "verify_scope",
+      "description": "Verify scope_path exists and is accessible",
+      "path": "/Users/Dev/plus-fe/front_7th_chapter1-3/src/"
+    },
+    {
+      "id": "verify_tests",
+      "description": "Ensure Node.js 22 is active (nvm use 22) and all tests pass before refactoring",
+      "commands": ["nvm use 22", "node -v", "npm test"]
+    },
+    {
+      "id": "create_backup",
+      "description": "Create git backup branch",
+      "branch_name": "backup/COMPONENT-1-spa-refactor"
+    },
+    {
+      "id": "detect_route",
+      "description": "Count files in scope, determine route (simple <10, standard 10-30, complex >30)",
+      "criteria": {
+        "simple": "< 10 files",
+        "standard": "10-30 files",
+        "complex": "> 30 files"
+      }
+    }
+  ],
+
+  "analysis_tasks": [
+    {
+      "id": "explore_structure",
+      "description": "Analyze current component structure",
+      "output": "01_structure_analysis.md",
+      "sections": [
+        "Current directory structure",
+        "Component organization patterns",
+        "File size and complexity metrics",
+        "Dependencies and imports analysis"
+      ]
+    },
+    {
+      "id": "identify_issues",
+      "description": "Identify structural problems",
+      "output": "02_issues_identified.md",
+      "sections": [
+        "Naming inconsistencies",
+        "Incorrect nesting/grouping",
+        "Missing logical separation",
+        "Code duplication patterns"
+      ]
+    },
+    {
+      "id": "create_plan",
+      "description": "Create refactoring plan",
+      "output": "03_refactor_plan.md",
+      "sections": [
+        "Target structure proposal",
+        "Migration strategy (file moves, renames)",
+        "Import path updates needed",
+        "Risk assessment and rollback plan"
+      ]
+    }
+  ],
+
+  "output_directory": "/Users/Dev/plus-fe/front_7th_chapter1-3/.ai-output/features/COMPONENT-1/",
+
+  "validation_gates": [
+    {
+      "type": "file_exists",
+      "file": "/Users/Dev/plus-fe/front_7th_chapter1-3/.ai-output/features/COMPONENT-1/01_structure_analysis.md"
+    },
+    {
+      "type": "file_exists",
+      "file": "/Users/Dev/plus-fe/front_7th_chapter1-3/.ai-output/features/COMPONENT-1/02_issues_identified.md"
+    },
+    {
+      "type": "file_exists",
+      "file": "/Users/Dev/plus-fe/front_7th_chapter1-3/.ai-output/features/COMPONENT-1/03_refactor_plan.md"
+    },
+    {
+      "type": "test_passes",
+      "description": "All tests must pass before proceeding"
+    }
+  ],
+
+  "guidelines": [
+    "Follow project coding standards from .claude/CLAUDE.md",
+    "Use Node.js 22 for all test executions (nvm use 22)",
+    "Create git backup branch before any changes",
+    "Detect route based on file count in scope",
+    "Record metrics (file count, complexity) in analysis documents",
+    "Report route detection result for orchestrator state update"
+  ]
+}

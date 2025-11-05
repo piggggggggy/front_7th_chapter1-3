@@ -1,0 +1,54 @@
+{
+  "workflow": "component-extraction",
+  "project_id": "CE-001",
+  "status": "initializing",
+  "current_phase": "pre-flight",
+  "completed_phases": [],
+  "context": {
+    "target_file": "/Users/Dev/plus-fe/front_7th_chapter1-3/src/App.tsx",
+    "current_size": 865,
+    "target_size": 200,
+    "reduction_goal_percent": 75,
+    "route": "standard",
+    "extraction_targets": "auto-detect"
+  },
+  "outputs": {
+    "analysis": {
+      "completed": false,
+      "files": [],
+      "summary": ""
+    },
+    "extraction": {
+      "completed": false,
+      "files": [],
+      "summary": ""
+    },
+    "verification": {
+      "completed": false,
+      "files": [],
+      "summary": ""
+    }
+  },
+  "metrics": {
+    "extractions_completed": 0,
+    "lines_reduced": 0,
+    "tests_status": "unknown"
+  },
+  "handoffs": [
+    {
+      "from": "orchestrator",
+      "to": "pre-flight",
+      "timestamp": "2025-11-05T00:00:00Z",
+      "context_provided": {
+        "target_file": "/Users/Dev/plus-fe/front_7th_chapter1-3/src/App.tsx",
+        "original_size": 865,
+        "route_detected": "standard"
+      }
+    }
+  ],
+  "next_action": {
+    "phase": "analysis",
+    "agent": "architect",
+    "task": "analyze-and-plan-extraction"
+  }
+}
