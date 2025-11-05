@@ -55,6 +55,7 @@ import {
   getWeeksAtMonth,
 } from './utils/dateUtils.ts';
 import { findOverlappingEvents } from './utils/eventOverlap.ts';
+import { getRepeatTypeLabel } from './utils/repeatUtils.ts';
 import { getTimeErrorMessage } from './utils/timeValidation.ts';
 
 const categories = ['업무', '개인', '가족', '기타'];
@@ -89,21 +90,6 @@ const eventBoxStyles = {
     width: '100%',
     overflow: 'hidden',
   },
-};
-
-const getRepeatTypeLabel = (type: RepeatType): string => {
-  switch (type) {
-    case 'daily':
-      return '일';
-    case 'weekly':
-      return '주';
-    case 'monthly':
-      return '월';
-    case 'yearly':
-      return '년';
-    default:
-      return '';
-  }
 };
 
 function App() {
