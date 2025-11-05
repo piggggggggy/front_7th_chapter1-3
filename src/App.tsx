@@ -221,39 +221,60 @@ function App() {
     resetForm();
   };
 
+  // Group props for EventFormFields
+  const basicInfoProps = {
+    title,
+    setTitle,
+    date,
+    setDate,
+    description,
+    setDescription,
+    location,
+    setLocation,
+    category,
+    setCategory,
+  };
+
+  const timeProps = {
+    startTime,
+    endTime,
+    handleStartTimeChange,
+    handleEndTimeChange,
+    startTimeError,
+    endTimeError,
+  };
+
+  const repeatProps = {
+    isRepeating,
+    setIsRepeating,
+    repeatType,
+    setRepeatType,
+    repeatInterval,
+    setRepeatInterval,
+    repeatEndDate,
+    setRepeatEndDate,
+  };
+
+  const notificationProps = {
+    notificationTime,
+    setNotificationTime,
+  };
+
+  const configProps = {
+    categories,
+    notificationOptions,
+  };
+
   return (
     <Box sx={{ width: '100%', height: '100vh', margin: 'auto', p: 5 }}>
       <Stack direction="row" spacing={6} sx={{ height: '100%' }}>
         <EventFormFields
           editingEvent={Boolean(editingEvent)}
-          title={title}
-          setTitle={setTitle}
-          date={date}
-          setDate={setDate}
-          startTime={startTime}
-          endTime={endTime}
-          handleStartTimeChange={handleStartTimeChange}
-          handleEndTimeChange={handleEndTimeChange}
-          startTimeError={startTimeError}
-          endTimeError={endTimeError}
-          description={description}
-          setDescription={setDescription}
-          location={location}
-          setLocation={setLocation}
-          category={category}
-          setCategory={setCategory}
-          isRepeating={isRepeating}
-          setIsRepeating={setIsRepeating}
-          repeatType={repeatType}
-          setRepeatType={setRepeatType}
-          repeatInterval={repeatInterval}
-          setRepeatInterval={setRepeatInterval}
-          repeatEndDate={repeatEndDate}
-          setRepeatEndDate={setRepeatEndDate}
-          notificationTime={notificationTime}
-          setNotificationTime={setNotificationTime}
-          categories={categories}
-          notificationOptions={notificationOptions}
+          basicInfo={basicInfoProps}
+          time={timeProps}
+          repeat={repeatProps}
+          notification={notificationProps}
+          config={configProps}
           onSubmit={addOrUpdateEvent}
         />
 

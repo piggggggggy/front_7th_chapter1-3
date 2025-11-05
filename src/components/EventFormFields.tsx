@@ -16,25 +16,30 @@ import { ChangeEvent } from 'react';
 import { RepeatType } from '../types';
 import { getTimeErrorMessage } from '../utils/timeValidation';
 
-interface EventFormFieldsProps {
-  // Form state
-  editingEvent: boolean;
+// Grouped prop interfaces
+interface BasicInfoProps {
   title: string;
   setTitle: (value: string) => void;
   date: string;
   setDate: (value: string) => void;
-  startTime: string;
-  endTime: string;
-  handleStartTimeChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  handleEndTimeChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  startTimeError: string | null;
-  endTimeError: string | null;
   description: string;
   setDescription: (value: string) => void;
   location: string;
   setLocation: (value: string) => void;
   category: string;
   setCategory: (value: string) => void;
+}
+
+interface TimeProps {
+  startTime: string;
+  endTime: string;
+  handleStartTimeChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  handleEndTimeChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  startTimeError: string | null;
+  endTimeError: string | null;
+}
+
+interface RepeatProps {
   isRepeating: boolean;
   setIsRepeating: (value: boolean) => void;
   repeatType: RepeatType;
@@ -43,49 +48,70 @@ interface EventFormFieldsProps {
   setRepeatInterval: (value: number) => void;
   repeatEndDate: string;
   setRepeatEndDate: (value: string) => void;
+}
+
+interface NotificationProps {
   notificationTime: number;
   setNotificationTime: (value: number) => void;
+}
 
-  // Constants
+interface ConfigProps {
   categories: string[];
   notificationOptions: Array<{ value: number; label: string }>;
+}
 
-  // Handler
+interface EventFormFieldsProps {
+  editingEvent: boolean;
+  basicInfo: BasicInfoProps;
+  time: TimeProps;
+  repeat: RepeatProps;
+  notification: NotificationProps;
+  config: ConfigProps;
   onSubmit: () => void;
 }
 
 export function EventFormFields({
   editingEvent,
-  title,
-  setTitle,
-  date,
-  setDate,
-  startTime,
-  endTime,
-  handleStartTimeChange,
-  handleEndTimeChange,
-  startTimeError,
-  endTimeError,
-  description,
-  setDescription,
-  location,
-  setLocation,
-  category,
-  setCategory,
-  isRepeating,
-  setIsRepeating,
-  repeatType,
-  setRepeatType,
-  repeatInterval,
-  setRepeatInterval,
-  repeatEndDate,
-  setRepeatEndDate,
-  notificationTime,
-  setNotificationTime,
-  categories,
-  notificationOptions,
+  basicInfo,
+  time,
+  repeat,
+  notification,
+  config,
   onSubmit,
 }: EventFormFieldsProps) {
+  // Destructure for easier access
+  const {
+    title,
+    setTitle,
+    date,
+    setDate,
+    description,
+    setDescription,
+    location,
+    setLocation,
+    category,
+    setCategory,
+  } = basicInfo;
+  const {
+    startTime,
+    endTime,
+    handleStartTimeChange,
+    handleEndTimeChange,
+    startTimeError,
+    endTimeError,
+  } = time;
+  const {
+    isRepeating,
+    setIsRepeating,
+    repeatType,
+    setRepeatType,
+    repeatInterval,
+    setRepeatInterval,
+    repeatEndDate,
+    setRepeatEndDate,
+  } = repeat;
+  const { notificationTime, setNotificationTime } = notification;
+  const { categories, notificationOptions } = config;
   return (
     <Stack spacing={2} sx={{ width: '20%' }}>
       <Typography variant="h4">{editingEvent ? '일정 수정' : '일정 추가'}</Typography>
