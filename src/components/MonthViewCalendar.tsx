@@ -9,6 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 
+import { DragAndDropHandlers } from '../hooks/useDragAndDrop';
 import { Event } from '../types';
 import { EventBox } from './EventBox';
 import { formatDate, formatMonth, getEventsForDay, getWeeksAtMonth } from '../utils/dateUtils';
@@ -19,6 +20,8 @@ interface MonthViewCalendarProps {
   notifiedEvents: string[];
   holidays: Record<string, string>;
   weekDays: string[];
+  dragHandlers?: DragAndDropHandlers<Event, string>;
+  onCellClick?: (date: string) => void;
 }
 
 export function MonthViewCalendar({
@@ -27,6 +30,8 @@ export function MonthViewCalendar({
   notifiedEvents,
   holidays,
   weekDays,
+  dragHandlers,
+  onCellClick,
 }: MonthViewCalendarProps) {
   const weeks = getWeeksAtMonth(currentDate);
 
@@ -50,10 +55,23 @@ export function MonthViewCalendar({
                 {week.map((day, dayIndex) => {
                   const dateString = day ? formatDate(currentDate, day) : '';
                   const holiday = holidays[dateString];
+                  const cellDate = day
+                    ? new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+                    : null;
 
                   return (
                     <TableCell
                       key={dayIndex}
+                      onDragOver={dragHandlers?.handleDragOver}
+                      onDragLeave={dragHandlers?.handleDragLeave}
+                      onDrop={
+                        dragHandlers && dateString
+                          ? (e) => dragHandlers.handleDrop(e, dateString)
+                          : undefined
+                      }
+                      onClick={
+                        onCellClick && dateString ? () => onCellClick(dateString) : undefined
+                      }
                       sx={{
                         height: '120px',
                         verticalAlign: 'top',
@@ -62,6 +80,13 @@ export function MonthViewCalendar({
                         border: '1px solid #e0e0e0',
                         overflow: 'hidden',
                         position: 'relative',
+                        cursor: onCellClick && day ? 'pointer' : 'default',
+                        '&:hover':
+                          onCellClick && day
+                            ? {
+                                backgroundColor: '#f5f5f5',
+                              }
+                            : {},
                       }}
                     >
                       {day && (
@@ -78,7 +103,17 @@ export function MonthViewCalendar({
                             const isNotified = notifiedEvents.includes(event.id);
 
                             return (
-                              <EventBox key={event.id} event={event} isNotified={isNotified} />
+                              <EventBox
+                                key={event.id}
+                                event={event}
+                                isNotified={isNotified}
+                                onDragStart={
+                                  dragHandlers
+                                    ? (e) => dragHandlers.handleDragStart(e, event)
+                                    : undefined
+                                }
+                                onDragEnd={dragHandlers?.handleDragEnd}
+                              />
                             );
                           })}
                         </>

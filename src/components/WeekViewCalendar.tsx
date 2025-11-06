@@ -9,6 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 
+import { DragAndDropHandlers } from '../hooks/useDragAndDrop';
 import { Event } from '../types';
 import { EventBox } from './EventBox';
 import { formatWeek, getWeekDates } from '../utils/dateUtils';
@@ -18,6 +19,8 @@ interface WeekViewCalendarProps {
   filteredEvents: Event[];
   notifiedEvents: string[];
   weekDays: string[];
+  dragHandlers?: DragAndDropHandlers<Event, string>;
+  onCellClick?: (date: string) => void;
 }
 
 export function WeekViewCalendar({
@@ -25,6 +28,8 @@ export function WeekViewCalendar({
   filteredEvents,
   notifiedEvents,
   weekDays,
+  dragHandlers,
+  onCellClick,
 }: WeekViewCalendarProps) {
   const weekDates = getWeekDates(currentDate);
 
@@ -47,6 +52,12 @@ export function WeekViewCalendar({
               {weekDates.map((date) => (
                 <TableCell
                   key={date.toISOString()}
+                  onDragOver={dragHandlers?.handleDragOver}
+                  onDragLeave={dragHandlers?.handleDragLeave}
+                  onDrop={dragHandlers ? (e) => dragHandlers.handleDrop(e, date) : undefined}
+                  onClick={
+                    onCellClick ? () => onCellClick(date.toISOString().split('T')[0]) : undefined
+                  }
                   sx={{
                     height: '120px',
                     verticalAlign: 'top',
@@ -54,6 +65,12 @@ export function WeekViewCalendar({
                     padding: 1,
                     border: '1px solid #e0e0e0',
                     overflow: 'hidden',
+                    cursor: onCellClick ? 'pointer' : 'default',
+                    '&:hover': onCellClick
+                      ? {
+                          backgroundColor: '#f5f5f5',
+                        }
+                      : {},
                   }}
                 >
                   <Typography variant="body2" fontWeight="bold">
@@ -64,7 +81,17 @@ export function WeekViewCalendar({
                     .map((event) => {
                       const isNotified = notifiedEvents.includes(event.id);
 
-                      return <EventBox key={event.id} event={event} isNotified={isNotified} />;
+                      return (
+                        <EventBox
+                          key={event.id}
+                          event={event}
+                          isNotified={isNotified}
+                          onDragStart={
+                            dragHandlers ? (e) => dragHandlers.handleDragStart(e, event) : undefined
+                          }
+                          onDragEnd={dragHandlers?.handleDragEnd}
+                        />
+                      );
                     })}
                 </TableCell>
               ))}

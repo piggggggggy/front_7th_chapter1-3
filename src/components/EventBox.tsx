@@ -7,6 +7,8 @@ import { getRepeatTypeLabel } from '../utils/repeatUtils';
 interface EventBoxProps {
   event: Event;
   isNotified: boolean;
+  onDragStart?: (e: React.DragEvent<HTMLDivElement>, event: Event) => void;
+  onDragEnd?: (e: React.DragEvent<HTMLDivElement>) => void;
 }
 
 const eventBoxStyles = {
@@ -30,14 +32,19 @@ const eventBoxStyles = {
   },
 };
 
-export function EventBox({ event, isNotified }: EventBoxProps) {
+export function EventBox({ event, isNotified, onDragStart, onDragEnd }: EventBoxProps) {
   const isRepeating = event.repeat.type !== 'none';
 
   return (
     <Box
+      draggable={!!onDragStart}
+      onDragStart={onDragStart ? (e) => onDragStart(e, event) : undefined}
+      onDragEnd={onDragEnd}
       sx={{
         ...eventBoxStyles.common,
         ...(isNotified ? eventBoxStyles.notified : eventBoxStyles.normal),
+        cursor: onDragStart ? 'grab' : 'default',
+        '&:active': onDragStart ? { cursor: 'grabbing' } : {},
       }}
     >
       <Stack direction="row" spacing={1} alignItems="center">

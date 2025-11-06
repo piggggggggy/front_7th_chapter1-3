@@ -10,7 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 import { CalendarHeader } from './components/CalendarHeader.tsx';
 import { EventFormFields } from './components/EventFormFields.tsx';
@@ -20,6 +20,7 @@ import { NotificationAlerts } from './components/NotificationAlerts.tsx';
 import RecurringEventDialog from './components/RecurringEventDialog.tsx';
 import { WeekViewCalendar } from './components/WeekViewCalendar.tsx';
 import { useCalendarView } from './hooks/useCalendarView.ts';
+import { useDragAndDrop } from './hooks/useDragAndDrop.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
@@ -96,11 +97,58 @@ function App() {
   const [overlappingEvents, setOverlappingEvents] = useState<Event[]>([]);
   const [isRecurringDialogOpen, setIsRecurringDialogOpen] = useState(false);
   const [pendingRecurringEdit, setPendingRecurringEdit] = useState<Event | null>(null);
+  const [pendingOverlapEdit, setPendingOverlapEdit] = useState<Event | null>(null);
   const [pendingRecurringDelete, setPendingRecurringDelete] = useState<Event | null>(null);
   const [recurringEditMode, setRecurringEditMode] = useState<boolean | null>(null); // true = single, false = all
   const [recurringDialogMode, setRecurringDialogMode] = useState<'edit' | 'delete'>('edit');
 
   const { enqueueSnackbar } = useSnackbar();
+
+  const handleClickCell = (dateString: string) => {
+    setEditingEvent(null);
+    resetForm();
+    setDate(dateString);
+  };
+
+  // Drag and drop handler with Event-specific business logic
+  const handleEventDrop = async (draggedEvent: Event, targetDate: string) => {
+    // No-op if dropped on same date
+    if (draggedEvent.date === targetDate) {
+      return;
+    }
+
+    const isRecurring = isRecurringEvent(draggedEvent);
+
+    const overlapping = findOverlappingEvents({ ...draggedEvent, date: targetDate }, events);
+    const hasOverlapEvent = overlapping.length > 0;
+
+    try {
+      // Recurring event - show dialog for single vs all edit
+      if (isRecurring) {
+        setPendingRecurringEdit({ ...draggedEvent, date: targetDate });
+        setRecurringDialogMode('edit');
+        setIsRecurringDialogOpen(true);
+      } else if (hasOverlapEvent) {
+        setPendingOverlapEdit({ ...draggedEvent, date: targetDate });
+        setOverlappingEvents(overlapping);
+        setIsOverlapDialogOpen(true);
+      } else {
+        // Non-recurring event - update directly
+        await saveEvent({ ...draggedEvent, date: targetDate });
+      }
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  };
+  const handleEventDragStart = (_: React.DragEvent, draggedEvent: Event) => {
+    setEditingEvent(draggedEvent);
+  };
+
+  const dragHandlers = useDragAndDrop<Event, string>({
+    onDragStart: handleEventDragStart,
+    onDrop: handleEventDrop,
+  });
 
   const handleRecurringConfirm = async (editSingleOnly: boolean) => {
     if (recurringDialogMode === 'edit' && pendingRecurringEdit) {
@@ -145,6 +193,35 @@ function App() {
       // Regular event deletion
       deleteEvent(event.id);
     }
+  };
+
+  const handleContinueWithOverlap = async () => {
+    setIsOverlapDialogOpen(false);
+    await saveEvent({
+      id: editingEvent ? editingEvent.id : undefined,
+      title: pendingOverlapEdit ? pendingOverlapEdit.title : title,
+      date: pendingOverlapEdit ? pendingOverlapEdit.date : date,
+      startTime: pendingOverlapEdit ? pendingOverlapEdit.startTime : startTime,
+      endTime: pendingOverlapEdit ? pendingOverlapEdit.endTime : endTime,
+      description: pendingOverlapEdit ? pendingOverlapEdit.description : description,
+      location: pendingOverlapEdit ? pendingOverlapEdit.location : location,
+      category: pendingOverlapEdit ? pendingOverlapEdit.category : category,
+      repeat: {
+        type: pendingOverlapEdit
+          ? (pendingOverlapEdit.repeat?.type ?? 'none')
+          : isRepeating
+            ? repeatType
+            : 'none',
+        interval: pendingOverlapEdit ? (pendingOverlapEdit.repeat?.interval ?? 0) : repeatInterval,
+        endDate: pendingOverlapEdit
+          ? (pendingOverlapEdit.repeat?.endDate ?? '')
+          : repeatEndDate || undefined,
+      },
+      notificationTime: pendingOverlapEdit
+        ? pendingOverlapEdit.notificationTime
+        : notificationTime || 0,
+    });
+    setPendingOverlapEdit(null);
   };
 
   const addOrUpdateEvent = async () => {
@@ -289,6 +366,8 @@ function App() {
               filteredEvents={filteredEvents}
               notifiedEvents={notifiedEvents}
               weekDays={weekDays}
+              dragHandlers={dragHandlers}
+              onCellClick={handleClickCell}
             />
           )}
           {view === 'month' && (
@@ -298,6 +377,8 @@ function App() {
               notifiedEvents={notifiedEvents}
               holidays={holidays}
               weekDays={weekDays}
+              dragHandlers={dragHandlers}
+              onCellClick={handleClickCell}
             />
           )}
         </Stack>
@@ -325,29 +406,15 @@ function App() {
           <DialogContentText>계속 진행하시겠습니까?</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setIsOverlapDialogOpen(false)}>취소</Button>
           <Button
-            color="error"
             onClick={() => {
               setIsOverlapDialogOpen(false);
-              saveEvent({
-                id: editingEvent ? editingEvent.id : undefined,
-                title,
-                date,
-                startTime,
-                endTime,
-                description,
-                location,
-                category,
-                repeat: {
-                  type: isRepeating ? repeatType : 'none',
-                  interval: repeatInterval,
-                  endDate: repeatEndDate || undefined,
-                },
-                notificationTime,
-              });
+              setPendingOverlapEdit(null);
             }}
           >
+            취소
+          </Button>
+          <Button color="error" onClick={handleContinueWithOverlap}>
             계속 진행
           </Button>
         </DialogActions>
