@@ -1,28 +1,16 @@
-import { useState, DragEvent } from 'react';
-
-import { Event } from '../types';
+import React, { useState } from 'react';
 
 /**
  * Constants for drag and drop data transfer
  */
 const DRAG_DATA_FORMAT = 'application/json';
-const NO_REPEAT = 'none';
 
 /**
- * Formats a Date object to YYYY-MM-DD string format
- * @param date - Date to format
- * @returns Date string in YYYY-MM-DD format
- */
-function formatDateString(date: Date): string {
-  return date.toISOString().split('T')[0];
-}
-
-/**
- * Parses event data from drag data transfer string
+ * Parses data from drag data transfer string
  * @param dataString - JSON string from dataTransfer
- * @returns Parsed Event object or null if invalid JSON
+ * @returns Parsed object or null if invalid JSON
  */
-function parseEventFromDragData(dataString: string): Event | null {
+function parseDataFromTransfer<T>(dataString: string): T | null {
   try {
     return JSON.parse(dataString);
   } catch {
@@ -33,150 +21,158 @@ function parseEventFromDragData(dataString: string): Event | null {
 /**
  * Parameters for useDragAndDrop hook
  */
-export interface UseDragAndDropParams {
+export interface UseDragAndDropParams<TDragData, TDropTarget> {
   /**
-   * Callback when a non-recurring event is dropped on a new date
-   * @param event - The event being moved
-   * @param newDate - Target date in YYYY-MM-DD format
+   * Callback when an item is dragged
+   * @param event - React drag event
+   * @param data - Data being dragged
    */
-  onEventUpdate: (event: Event, newDate: string) => Promise<void>;
-
+  onDragStart?: (event: React.DragEvent, dragData: TDragData) => void;
   /**
-   * Callback when a recurring event is dropped (triggers dialog for single vs. all edit)
-   * @param event - The recurring event being moved
-   * @param newDate - Target date in YYYY-MM-DD format
+   * Callback when an item is dropped
+   * @param draggedData - The data that was being dragged
+   * @param dropTarget - The target where item was dropped
    */
-  onRecurringEventDrop: (event: Event, newDate: string) => void;
+  onDrop: (draggedData: TDragData, dropTarget: TDropTarget) => Promise<void> | void;
 }
 
 /**
  * Return type for useDragAndDrop hook
  */
-export interface DragAndDropHandlers {
+export interface DragAndDropHandlers<TDragData, TDropTarget> {
   /**
-   * Handler for drag start event on EventBox
+   * Handler for drag start event
    * @param event - React drag event
-   * @param eventData - Event data being dragged
+   * @param data - Data being dragged
    */
-  handleDragStart: (event: DragEvent<HTMLElement>, eventData: Event) => void;
+  handleDragStart: (event: React.DragEvent, data: TDragData) => void;
 
   /**
-   * Handler for drag end event on EventBox
+   * Handler for drag end event
    * @param event - React drag event
    */
-  handleDragEnd: (event: DragEvent<HTMLElement>) => void;
+  handleDragEnd: (event: React.DragEvent) => void;
 
   /**
-   * Handler for drag over event on TableCell (drop zone)
+   * Handler for drag over event on drop zone
    * Prevents default to enable drop
    * @param event - React drag event
    */
-  handleDragOver: (event: DragEvent<HTMLElement>) => void;
+  handleDragOver: (event: React.DragEvent) => void;
 
   /**
-   * Handler for drag leave event on TableCell (drop zone)
+   * Handler for drag leave event on drop zone
    * @param event - React drag event
    */
-  handleDragLeave: (event: DragEvent<HTMLElement>) => void;
+  handleDragLeave: (event: React.DragEvent) => void;
 
   /**
-   * Handler for drop event on TableCell
+   * Handler for drop event
    * @param event - React drag event
-   * @param targetDate - Date of the cell where event was dropped
+   * @param dropTarget - Target where item was dropped
    */
-  handleDrop: (event: DragEvent<HTMLElement>, targetDate: Date) => Promise<void>;
+  handleDrop: (event: React.DragEvent, dropTarget: TDropTarget) => Promise<void>;
 
   /**
-   * State indicating if an event is currently being dragged
+   * State indicating if an item is currently being dragged
    */
   isDragging: boolean;
 }
 
 /**
- * Custom hook for managing drag-and-drop functionality in calendar
- * Encapsulates HTML5 Drag & Drop API logic for moving events between calendar cells
+ * Custom hook for managing drag-and-drop functionality
+ * Completely generic and agnostic to business logic
  *
- * @param params - Configuration callbacks for event updates
+ * This hook only handles HTML5 Drag & Drop API mechanics:
+ * - Storing/retrieving data in dataTransfer
+ * - Managing drag state
+ * - Preventing default behaviors
+ *
+ * All business logic (validation, API calls, etc.) should be in onDrop callback
+ *
+ * @param params - Configuration callbacks
  * @returns Handlers and state for drag-drop interactions
  *
- * @example
+ * @example Calendar use case
  * ```tsx
- * const dragHandlers = useDragAndDrop({
- *   onEventUpdate: async (event, newDate) => {
- *     await saveEvent({ ...event, date: newDate });
- *   },
- *   onRecurringEventDrop: (event, newDate) => {
- *     openRecurringDialog(event, newDate);
+ * const dragHandlers = useDragAndDrop<Event, Date>({
+ *   onDrop: async (event, targetDate) => {
+ *     await updateEvent(event, targetDate);
  *   }
  * });
  *
- * // Pass handlers to components
- * <EventBox onDragStart={dragHandlers.handleDragStart} onDragEnd={dragHandlers.handleDragEnd} />
- * <TableCell onDrop={(e) => dragHandlers.handleDrop(e, cellDate)} onDragOver={dragHandlers.handleDragOver} />
+ * <EventBox onDragStart={(e) => dragHandlers.handleDragStart(e, event)} />
+ * <TableCell onDrop={(e) => dragHandlers.handleDrop(e, cellDate)} />
+ * ```
+ *
+ * @example Kanban board use case
+ * ```tsx
+ * const dragHandlers = useDragAndDrop<Task, { columnId: string, index: number }>({
+ *   onDrop: async (task, target) => {
+ *     await moveTask(task, target.columnId, target.index);
+ *   }
+ * });
+ * ```
+ *
+ * @example File upload use case
+ * ```tsx
+ * const dragHandlers = useDragAndDrop<File, { folderId: string }>({
+ *   onDrop: async (file, target) => {
+ *     await uploadFile(file, target.folderId);
+ *   }
+ * });
  * ```
  */
-export function useDragAndDrop(params: UseDragAndDropParams): DragAndDropHandlers {
+export function useDragAndDrop<TDragData, TDropTarget>(
+  params: UseDragAndDropParams<TDragData, TDropTarget>
+): DragAndDropHandlers<TDragData, TDropTarget> {
   const [isDragging, setIsDragging] = useState(false);
 
-  const handleDragStart = (event: DragEvent<HTMLElement>, eventData: Event): void => {
-    // Store event data in dataTransfer as JSON
-    event.dataTransfer.setData(DRAG_DATA_FORMAT, JSON.stringify(eventData));
+  const handleDragStart = (event: React.DragEvent, data: TDragData): void => {
+    // Store data in dataTransfer as JSON
+    event.dataTransfer.setData(DRAG_DATA_FORMAT, JSON.stringify(data));
     event.dataTransfer.effectAllowed = 'move';
 
     // Set dragging state for visual feedback
     setIsDragging(true);
+
+    params.onDragStart?.(event, data);
   };
 
-  const handleDragEnd = (event: DragEvent<HTMLElement>): void => {
+  const handleDragEnd = (_: React.DragEvent): void => {
     // Reset dragging state
     setIsDragging(false);
   };
 
-  const handleDragOver = (event: DragEvent<HTMLElement>): void => {
+  const handleDragOver = (event: React.DragEvent): void => {
     // Prevent default to enable drop
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDragLeave = (event: DragEvent<HTMLElement>): void => {
+  const handleDragLeave = (_: React.DragEvent): void => {
     // No-op for now - visual feedback can be added later if needed
   };
 
-  const handleDrop = async (event: DragEvent<HTMLElement>, targetDate: Date): Promise<void> => {
+  const handleDrop = async (event: React.DragEvent, dropTarget: TDropTarget): Promise<void> => {
     // Prevent default browser behavior
     event.preventDefault();
 
     try {
-      // Extract and parse event data from dataTransfer
-      const eventDataStr = event.dataTransfer.getData(DRAG_DATA_FORMAT);
-      const eventData = parseEventFromDragData(eventDataStr);
+      // Extract and parse data from dataTransfer
+      const dataString = event.dataTransfer.getData(DRAG_DATA_FORMAT);
+      const draggedData = parseDataFromTransfer<TDragData>(dataString);
 
       // Handle invalid JSON gracefully
-      if (!eventData) {
+      if (!draggedData) {
         return;
       }
 
-      // Format target date as YYYY-MM-DD
-      const newDate = formatDateString(targetDate);
-
-      // No-op if dropped on same date
-      if (eventData.date === newDate) {
-        return;
-      }
-
-      // Route to appropriate callback based on event type
-      if (eventData.repeat.type !== NO_REPEAT) {
-        // Recurring event - trigger dialog
-        params.onRecurringEventDrop(eventData, newDate);
-      } else {
-        // Non-recurring event - update directly
-        try {
-          await params.onEventUpdate(eventData, newDate);
-        } catch (error) {
-          // Error handling delegated to parent component
-          // Just ensure state cleanup happens in finally
-        }
-      }
+      // Delegate to business logic callback
+      await params.onDrop(draggedData, dropTarget);
+    } catch (error) {
+      // Error handling delegated to parent component
+      // Just ensure state cleanup happens in finally
     } finally {
       // Always reset dragging state, even on error
       setIsDragging(false);
