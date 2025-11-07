@@ -26,19 +26,6 @@ const API_BASE_URL = 'http://localhost:3000';
 
 export class APIHelpers {
   /**
-   * Clears all events from the database
-   */
-  static async clearAllEvents(page: Page): Promise<void> {
-    const response = await page.request.get(`${API_BASE_URL}/api/events`);
-    const data = await response.json();
-    const events = data.events || [];
-
-    for (const event of events) {
-      await page.request.delete(`${API_BASE_URL}/api/events/${event.id}`);
-    }
-  }
-
-  /**
    * Creates an event via API
    */
   static async createEvent(page: Page, event: Event): Promise<Event> {

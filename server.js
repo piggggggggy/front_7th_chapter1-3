@@ -11,11 +11,12 @@ const __dirname = path.resolve();
 
 app.use(express.json());
 
+// E2E 테스트는 별도 DB 파일 사용
 const dbName = process.env.TEST_ENV === 'e2e' ? 'e2e.json' : 'realEvents.json';
+const dbPath = `${__dirname}/src/__mocks__/response/${dbName}`;
 
 const getEvents = async () => {
-  const data = await readFile(`${__dirname}/src/__mocks__/response/${dbName}`, 'utf8');
-
+  const data = await readFile(dbPath, 'utf8');
   return JSON.parse(data);
 };
 
@@ -28,12 +29,9 @@ app.post('/api/events', async (req, res) => {
   const events = await getEvents();
   const newEvent = { id: randomUUID(), ...req.body };
 
-  fs.writeFileSync(
-    `${__dirname}/src/__mocks__/response/${dbName}`,
-    JSON.stringify({
-      events: [...events.events, newEvent],
-    })
-  );
+  fs.writeFileSync(dbPath, JSON.stringify({
+    events: [...events.events, newEvent],
+  }));
 
   res.status(201).json(newEvent);
 });
@@ -46,12 +44,9 @@ app.put('/api/events/:id', async (req, res) => {
     const newEvents = [...events.events];
     newEvents[eventIndex] = { ...events.events[eventIndex], ...req.body };
 
-    fs.writeFileSync(
-      `${__dirname}/src/__mocks__/response/${dbName}`,
-      JSON.stringify({
-        events: newEvents,
-      })
-    );
+    fs.writeFileSync(dbPath, JSON.stringify({
+      events: newEvents,
+    }));
 
     res.json(events.events[eventIndex]);
   } else {
@@ -63,12 +58,9 @@ app.delete('/api/events/:id', async (req, res) => {
   const events = await getEvents();
   const id = req.params.id;
 
-  fs.writeFileSync(
-    `${__dirname}/src/__mocks__/response/${dbName}`,
-    JSON.stringify({
-      events: events.events.filter((event) => event.id !== id),
-    })
-  );
+  fs.writeFileSync(dbPath, JSON.stringify({
+    events: events.events.filter((event) => event.id !== id),
+  }));
 
   res.status(204).send();
 });
@@ -88,12 +80,9 @@ app.post('/api/events-list', async (req, res) => {
     };
   });
 
-  fs.writeFileSync(
-    `${__dirname}/src/__mocks__/response/${dbName}`,
-    JSON.stringify({
-      events: [...events.events, ...newEvents],
-    })
-  );
+  fs.writeFileSync(dbPath, JSON.stringify({
+    events: [...events.events, ...newEvents],
+  }));
 
   res.status(201).json(newEvents);
 });
@@ -112,12 +101,9 @@ app.put('/api/events-list', async (req, res) => {
   });
 
   if (isUpdated) {
-    fs.writeFileSync(
-      `${__dirname}/src/__mocks__/response/${dbName}`,
-      JSON.stringify({
-        events: newEvents,
-      })
-    );
+    fs.writeFileSync(dbPath, JSON.stringify({
+      events: newEvents,
+    }));
 
     res.json(events.events);
   } else {
@@ -129,12 +115,9 @@ app.delete('/api/events-list', async (req, res) => {
   const events = await getEvents();
   const newEvents = events.events.filter((event) => !req.body.eventIds.includes(event.id)); // ? ids를 전달하면 해당 아이디를 기준으로 events에서 제거
 
-  fs.writeFileSync(
-    `${__dirname}/src/__mocks__/response/${dbName}`,
-    JSON.stringify({
-      events: newEvents,
-    })
-  );
+  fs.writeFileSync(dbPath, JSON.stringify({
+    events: newEvents,
+  }));
 
   res.status(204).send();
 });
@@ -165,10 +148,7 @@ app.put('/api/recurring-events/:repeatId', async (req, res) => {
     return event;
   });
 
-  fs.writeFileSync(
-    `${__dirname}/src/__mocks__/response/${dbName}`,
-    JSON.stringify({ events: newEvents })
-  );
+  fs.writeFileSync(dbPath, JSON.stringify({ events: newEvents }));
 
   res.json(seriesEvents);
 });
@@ -183,22 +163,17 @@ app.delete('/api/recurring-events/:repeatId', async (req, res) => {
     return res.status(404).send('Recurring series not found');
   }
 
-  fs.writeFileSync(
-    `${__dirname}/src/__mocks__/response/${dbName}`,
-    JSON.stringify({ events: remainingEvents })
-  );
+  fs.writeFileSync(dbPath, JSON.stringify({ events: remainingEvents }));
 
   res.status(204).send();
 });
 
 app.listen(port, () => {
-  if (!fs.existsSync(`${__dirname}/src/__mocks__/response/${dbName}`)) {
-    fs.writeFileSync(
-      `${__dirname}/src/__mocks__/response/${dbName}`,
-      JSON.stringify({
-        events: [],
-      })
-    );
+  if (!fs.existsSync(dbPath)) {
+    fs.writeFileSync(dbPath, JSON.stringify({ events: [] }));
+    console.log(`Database initialized: ${dbName}`);
   }
+
   console.log(`Server running at http://localhost:${port}`);
+  console.log(`Using database: ${dbName}`);
 });
