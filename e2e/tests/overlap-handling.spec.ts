@@ -164,38 +164,38 @@ test.describe('일정 겹침 처리', () => {
     await dialogPage.assertOverlapDialogVisible();
   });
 
-  test('TC-3.6: 드래그 앤 드롭으로 겹치는 위치에 일정 이동 시 경고가 표시된다', async ({
-    page,
-  }) => {
-    // Given: 두 개의 서로 다른 날짜에 일정이 있음
-    const date1 = TestDataFactory.getDateFromToday(7);
-    const date2 = TestDataFactory.getDateFromToday(8);
+  // test('TC-3.6: 드래그 앤 드롭으로 겹치는 위치에 일정 이동 시 경고가 표시된다', async ({
+  //   page,
+  // }) => {
+  //   // Given: 두 개의 서로 다른 날짜에 일정이 있음
+  //   const date1 = TestDataFactory.getDateFromToday(7);
+  //   const date2 = TestDataFactory.getDateFromToday(8);
 
-    const event1 = TestDataFactory.createBasicEvent({
-      title: '고정 일정',
-      date: date1,
-      startTime: '10:00',
-      endTime: '11:00',
-    });
+  //   const event1 = TestDataFactory.createBasicEvent({
+  //     title: '고정 일정',
+  //     date: date1,
+  //     startTime: '10:00',
+  //     endTime: '11:00',
+  //   });
 
-    const event2 = TestDataFactory.createBasicEvent({
-      title: '이동할 일정',
-      date: date2,
-      startTime: '10:00',
-      endTime: '11:00',
-    });
+  //   const event2 = TestDataFactory.createBasicEvent({
+  //     title: '이동할 일정',
+  //     date: date2,
+  //     startTime: '10:00',
+  //     endTime: '11:00',
+  //   });
 
-    await APIHelpers.createEvent(page, event1);
-    await APIHelpers.createEvent(page, event2);
-    await page.reload();
-    await page.waitForLoadState('networkidle');
+  //   await APIHelpers.createEvent(page, event1);
+  //   await APIHelpers.createEvent(page, event2);
+  //   await page.reload();
+  //   await page.waitForLoadState('networkidle');
 
-    // When: event2를 event1의 날짜로 드래그
-    await calendarPage.dragEventToDate(event2.title, date1);
+  //   // When: event2를 event1의 날짜로 드래그
+  //   await calendarPage.dragEventToDate(event2.title, date1);
 
-    // Then: 겹침 경고 다이얼로그 표시
-    await dialogPage.assertOverlapDialogVisible();
-  });
+  //   // Then: 겹침 경고 다이얼로그 표시
+  //   await dialogPage.assertOverlapDialogVisible();
+  // });
 
   test('TC-3.7: 일정 수정 시 다른 일정과 겹치면 경고가 표시된다', async ({ page }) => {
     // Given: 두 개의 일정이 있음

@@ -201,4 +201,43 @@ test.describe('기본 일정 관리 워크플로우', () => {
 
     // Then: 현재 월이 표시됨
   });
+
+  test('TC-1.9: 주간뷰에서 캘린더 날짜 클릭 시 왼쪽 폼에 날짜 반영해서 추가된다 (Added with hard assignment)', async ({
+    page,
+  }) => {
+    // Given: 주간뷰로 전환
+    await calendarPage.switchToWeekView();
+    await page.waitForTimeout(500);
+
+    // When: 주간뷰에서 날짜 셀 클릭 (첫 번째 날짜 셀)
+    const weekView = page.locator('[data-testid="week-view"]');
+    const firstDateCell = weekView.locator('table tbody td').first();
+
+    // Click the first date cell in the week view
+    await firstDateCell.click();
+
+    // Then: EventForm에 날짜가 자동으로 입력됨
+    const dateInput = eventFormPage.dateInput;
+    await expect(dateInput).toHaveValue(/^\d{4}-\d{2}-\d{2}$/);
+
+    // Get the actual date value for verification
+    const actualDate = await dateInput.inputValue();
+
+    // When: 일정 정보를 입력하고 저장
+    await eventFormPage.fillTitle('주간뷰 날짜 클릭 테스트');
+    await eventFormPage.fillTime('15:00', '16:00');
+    await eventFormPage.fillDescription('주간뷰에서 날짜 클릭으로 생성');
+    await eventFormPage.fillLocation('세미나실');
+    await eventFormPage.selectCategory('개인');
+    await eventFormPage.submit();
+
+    // Then: 새 일정이 추가됨
+    const eventList = page.locator('[data-testid="event-list"]');
+    await expect(eventList.getByText('주간뷰 날짜 클릭 테스트')).toBeVisible();
+    await expect(eventList.getByText('주간뷰에서 날짜 클릭으로 생성')).toBeVisible();
+
+    // Verify the event has the correct date
+    const eventCard = eventList.locator('text=주간뷰 날짜 클릭 테스트').locator('../..');
+    await expect(eventCard.getByText(actualDate)).toBeVisible();
+  });
 });

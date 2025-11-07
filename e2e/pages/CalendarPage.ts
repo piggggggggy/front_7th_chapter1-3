@@ -1,5 +1,7 @@
 import { Page, Locator } from '@playwright/test';
 
+import { simulateHTML5DragAndDrop } from '../utils/html5-dnd-helper';
+
 export class CalendarPage {
   readonly page: Page;
   readonly prevButton: Locator;
@@ -52,14 +54,27 @@ export class CalendarPage {
     return this.page.locator(`[data-testid="event-box"]:has-text("${title}")`);
   }
 
+  // async dragEventToDate(eventTitle: string, targetDateString: string) {
+  //   const targetDate = new Date(targetDateString);
+  //   const targetDay = targetDate.getDate();
+
+  //   const eventBox = await this.getEventBox(eventTitle);
+  //   console.log('eventBox', eventBox);
+  //   const targetCell = this.page.locator(`td:has-text("${targetDay}")`).first();
+  //   console.log('targetCell', targetCell);
+
+  //   await eventBox.dragTo(targetCell, {
+  //     force: true,
+  //     timeout: 10000,
+  //   });
+  // }
   async dragEventToDate(eventTitle: string, targetDateString: string) {
     const targetDate = new Date(targetDateString);
     const targetDay = targetDate.getDate();
 
     const eventBox = await this.getEventBox(eventTitle);
     const targetCell = this.page.locator(`td:has-text("${targetDay}")`).first();
-
-    await eventBox.dragTo(targetCell);
+    await simulateHTML5DragAndDrop(this.page, eventBox, targetCell, eventTitle);
   }
 
   async assertEventDisplayed(title: string, date?: string) {
