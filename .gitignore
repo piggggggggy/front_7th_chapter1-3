@@ -11,3 +11,6 @@ node_modules
 
 # E2E test database (auto-generated)
 src/__mocks__/response/e2e.json
+
+# Storybook build output
+storybook-static/
