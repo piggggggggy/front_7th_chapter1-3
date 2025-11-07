@@ -76,7 +76,7 @@ export interface DragAndDropHandlers<TDragData, TDropTarget> {
   /**
    * State indicating if an item is currently being dragged
    */
-  // isDragging: boolean;
+  isDragging: boolean;
 }
 
 /**
@@ -185,6 +185,6 @@ export function useDragAndDrop<TDragData, TDropTarget>(
     handleDragOver,
     handleDragLeave,
     handleDrop,
-    // isDragging,
+    isDragging,
   };
 }

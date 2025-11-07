@@ -4,7 +4,7 @@ import { fn } from '@storybook/test';
 import { MonthViewCalendar } from './MonthViewCalendar';
 import { mockEvents } from '../stories/fixtures/mockData';
 
-const meta = {
+const meta: Meta<typeof MonthViewCalendar> = {
   title: 'Components/MonthViewCalendar',
   component: MonthViewCalendar,
   parameters: {
@@ -18,7 +18,7 @@ const meta = {
       </div>
     ),
   ],
-} satisfies Meta<typeof MonthViewCalendar>;
+};
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -120,6 +120,7 @@ export const WithDragAndDrop: Story = {
       handleDragOver: fn(),
       handleDragLeave: fn(),
       handleDrop: fn(),
+      isDragging: false,
     },
     onCellClick: fn(),
   },
