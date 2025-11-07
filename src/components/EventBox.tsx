@@ -37,6 +37,7 @@ export function EventBox({ event, isNotified, onDragStart, onDragEnd }: EventBox
 
   return (
     <Box
+      data-testid="event-box"
       draggable={!!onDragStart}
       onDragStart={onDragStart ? (e) => onDragStart(e, event) : undefined}
       onDragEnd={onDragEnd}

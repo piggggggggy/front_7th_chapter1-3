@@ -23,7 +23,7 @@ export function NotificationAlerts({ notifications, onClose }: NotificationAlert
           severity="info"
           sx={{ width: 'auto' }}
           action={
-            <IconButton size="small" onClick={() => onClose(index)}>
+            <IconButton size="small" onClick={() => onClose(index)} aria-label="close">
               <Close />
             </IconButton>
           }
