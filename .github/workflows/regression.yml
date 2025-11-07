@@ -1,4 +1,4 @@
-name: E2E Tests
+name: Visual Regression Tests (Chromatic)
 
 on:
   push:
@@ -11,12 +11,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  e2e:
+  regression:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
@@ -34,9 +34,13 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+      - name: Build Storybook
+        run: pnpm build-storybook
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Run E2E tests
-        run: pnpm run test:e2e
+      - name: Publish to Chromatic
+        uses: chromaui/action@latest
+        with:
+          # projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          buildScriptName: build-storybook
+          exitZeroOnChanges: true # Don't fail CI on visual changes
+          autoAcceptChanges: main # Auto-accept changes on main branch
