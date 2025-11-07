@@ -100,7 +100,9 @@ function App() {
   const [pendingOverlapEdit, setPendingOverlapEdit] = useState<Event | null>(null);
   const [pendingRecurringDelete, setPendingRecurringDelete] = useState<Event | null>(null);
   const [recurringEditMode, setRecurringEditMode] = useState<boolean | null>(null); // true = single, false = all
-  const [recurringDialogMode, setRecurringDialogMode] = useState<'edit' | 'delete'>('edit');
+  const [recurringDialogMode, setRecurringDialogMode] = useState<
+    'edit' | 'edit-drag-drop' | 'delete'
+  >('edit');
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -112,6 +114,7 @@ function App() {
 
   // Drag and drop handler with Event-specific business logic
   const handleEventDrop = async (draggedEvent: Event, targetDate: string) => {
+    console.log('handleEventDrop', draggedEvent, targetDate);
     // No-op if dropped on same date
     if (draggedEvent.date === targetDate) {
       return;
@@ -126,7 +129,7 @@ function App() {
       // Recurring event - show dialog for single vs all edit
       if (isRecurring) {
         setPendingRecurringEdit({ ...draggedEvent, date: targetDate });
-        setRecurringDialogMode('edit');
+        setRecurringDialogMode('edit-drag-drop');
         setIsRecurringDialogOpen(true);
       } else if (hasOverlapEvent) {
         setPendingOverlapEdit({ ...draggedEvent, date: targetDate });
@@ -155,6 +158,12 @@ function App() {
       // 편집 모드 저장하고 편집 폼으로 이동
       setRecurringEditMode(editSingleOnly);
       editEvent(pendingRecurringEdit);
+      setIsRecurringDialogOpen(false);
+      setPendingRecurringEdit(null);
+    } else if (recurringDialogMode === 'edit-drag-drop' && pendingRecurringEdit) {
+      // 편집 모드 저장하고 편집 폼으로 이동
+      setRecurringEditMode(editSingleOnly);
+      await saveEvent({ ...pendingRecurringEdit, date: pendingRecurringEdit.date });
       setIsRecurringDialogOpen(false);
       setPendingRecurringEdit(null);
     } else if (recurringDialogMode === 'delete' && pendingRecurringDelete) {

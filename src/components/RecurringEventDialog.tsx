@@ -12,13 +12,17 @@ import { Event } from '../types';
 /**
  * Available operation modes for the recurring event dialog
  */
-type DialogMode = 'edit' | 'delete';
+type DialogMode = 'edit' | 'edit-drag-drop' | 'delete';
 
 /**
  * Dialog content configuration for different modes
  */
 const DIALOG_CONFIG = {
   edit: {
+    title: '반복 일정 수정',
+    message: '해당 일정만 수정하시겠어요?',
+  },
+  'edit-drag-drop': {
     title: '반복 일정 수정',
     message: '해당 일정만 수정하시겠어요?',
   },
