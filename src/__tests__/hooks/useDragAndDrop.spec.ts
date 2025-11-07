@@ -219,9 +219,7 @@ describe('useDragAndDrop', () => {
       }
 
       const calendarOnDrop = vi.fn().mockResolvedValue(undefined);
-      const { result } = renderHook(() =>
-        useDragAndDrop<Event, Date>({ onDrop: calendarOnDrop })
-      );
+      const { result } = renderHook(() => useDragAndDrop<Event, Date>({ onDrop: calendarOnDrop }));
 
       const event: Event = { id: '1', title: 'Meeting', date: '2025-10-15' };
       const targetDate = new Date('2025-10-20');

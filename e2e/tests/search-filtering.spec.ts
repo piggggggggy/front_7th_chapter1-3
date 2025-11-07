@@ -2,19 +2,16 @@ import { test, expect } from '@playwright/test';
 
 import { TestDataFactory } from '../fixtures/test-data';
 import { CalendarPage } from '../pages/CalendarPage';
-import { EventFormPage } from '../pages/EventFormPage';
 import { EventListPage } from '../pages/EventListPage';
 import { APIHelpers } from '../utils/api-helpers';
 import { SeedHelpers } from '../utils/seed-helpers';
 
 test.describe('검색 및 필터링', () => {
   let calendarPage: CalendarPage;
-  let eventFormPage: EventFormPage;
   let eventListPage: EventListPage;
 
   test.beforeEach(async ({ page }) => {
     calendarPage = new CalendarPage(page);
-    eventFormPage = new EventFormPage(page);
     eventListPage = new EventListPage(page);
 
     SeedHelpers.resetDatabase();

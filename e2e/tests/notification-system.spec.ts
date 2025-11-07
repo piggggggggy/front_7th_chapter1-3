@@ -3,20 +3,17 @@ import { test, expect } from '@playwright/test';
 import { TestDataFactory } from '../fixtures/test-data';
 import { CalendarPage } from '../pages/CalendarPage';
 import { EventFormPage } from '../pages/EventFormPage';
-import { EventListPage } from '../pages/EventListPage';
 import { NotificationPage } from '../pages/NotificationPage';
 import { SeedHelpers } from '../utils/seed-helpers';
 
 test.describe('알림 시스템', () => {
   let calendarPage: CalendarPage;
   let eventFormPage: EventFormPage;
-  let eventListPage: EventListPage;
   let notificationPage: NotificationPage;
 
   test.beforeEach(async ({ page }) => {
     calendarPage = new CalendarPage(page);
     eventFormPage = new EventFormPage(page);
-    eventListPage = new EventListPage(page);
     notificationPage = new NotificationPage(page);
 
     SeedHelpers.resetDatabase();

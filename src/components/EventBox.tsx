@@ -1,5 +1,6 @@
 import { Notifications, Repeat } from '@mui/icons-material';
 import { Box, Stack, Tooltip, Typography } from '@mui/material';
+import { DragEvent } from 'react';
 
 import { Event } from '../types';
 import { getRepeatTypeLabel } from '../utils/repeatUtils';
@@ -7,8 +8,8 @@ import { getRepeatTypeLabel } from '../utils/repeatUtils';
 interface EventBoxProps {
   event: Event;
   isNotified: boolean;
-  onDragStart?: (e: React.DragEvent<HTMLDivElement>, event: Event) => void;
-  onDragEnd?: (e: React.DragEvent<HTMLDivElement>) => void;
+  onDragStart?: (e: DragEvent<HTMLDivElement>, event: Event) => void;
+  onDragEnd?: (e: DragEvent<HTMLDivElement>) => void;
 }
 
 const eventBoxStyles = {

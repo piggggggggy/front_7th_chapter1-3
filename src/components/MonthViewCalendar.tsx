@@ -55,9 +55,6 @@ export function MonthViewCalendar({
                 {week.map((day, dayIndex) => {
                   const dateString = day ? formatDate(currentDate, day) : '';
                   const holiday = holidays[dateString];
-                  const cellDate = day
-                    ? new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
-                    : null;
 
                   return (
                     <TableCell
