@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { DragEvent } from 'react';
+import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 
 import { useDragAndDrop } from '../../hooks/useDragAndDrop';
 
@@ -20,7 +21,7 @@ const createDragEvent = (type: string) => {
       effectAllowed: 'move',
       dropEffect: 'move',
     },
-  } as unknown as React.DragEvent;
+  } as unknown as DragEvent;
 };
 
 describe('useDragAndDrop', () => {
@@ -97,7 +98,7 @@ describe('useDragAndDrop', () => {
       const mockData = { id: '1', title: 'Test' };
       const dropTarget = { targetId: 'target-1' };
       const dragEvent = createDragEvent('drop');
-      dragEvent.dataTransfer.getData.mockReturnValue(JSON.stringify(mockData));
+      (dragEvent.dataTransfer.getData as Mock).mockReturnValue(JSON.stringify(mockData));
 
       await act(async () => {
         await result.current.handleDrop(dragEvent, dropTarget);
@@ -111,7 +112,7 @@ describe('useDragAndDrop', () => {
 
       const mockData = { id: '1' };
       const dragEvent = createDragEvent('drop');
-      dragEvent.dataTransfer.getData.mockReturnValue(JSON.stringify(mockData));
+      (dragEvent.dataTransfer.getData as Mock).mockReturnValue(JSON.stringify(mockData));
 
       await act(async () => {
         await result.current.handleDrop(dragEvent, { target: 'test' });
@@ -126,7 +127,7 @@ describe('useDragAndDrop', () => {
       const mockData = { id: '1' };
       const dragStartEvent = createDragEvent('dragstart');
       const dragEvent = createDragEvent('drop');
-      dragEvent.dataTransfer.getData.mockReturnValue(JSON.stringify(mockData));
+      (dragEvent.dataTransfer.getData as Mock).mockReturnValue(JSON.stringify(mockData));
 
       act(() => {
         result.current.handleDragStart(dragStartEvent, mockData);
@@ -162,7 +163,7 @@ describe('useDragAndDrop', () => {
       const mockData = { id: '1' };
       const dragStartEvent = createDragEvent('dragstart');
       const dragEvent = createDragEvent('drop');
-      dragEvent.dataTransfer.getData.mockReturnValue(JSON.stringify(mockData));
+      (dragEvent.dataTransfer.getData as Mock).mockReturnValue(JSON.stringify(mockData));
 
       act(() => {
         result.current.handleDragStart(dragStartEvent, mockData);
@@ -187,7 +188,7 @@ describe('useDragAndDrop', () => {
       const { result } = renderHook(() => useDragAndDrop({ onDrop }));
 
       const dragEvent = createDragEvent('drop');
-      dragEvent.dataTransfer.getData.mockReturnValue('invalid json');
+      (dragEvent.dataTransfer.getData as Mock).mockReturnValue('invalid json');
 
       await act(async () => {
         await result.current.handleDrop(dragEvent, { target: 'test' });
@@ -200,7 +201,7 @@ describe('useDragAndDrop', () => {
       const { result } = renderHook(() => useDragAndDrop({ onDrop }));
 
       const dragEvent = createDragEvent('drop');
-      dragEvent.dataTransfer.getData.mockReturnValue('');
+      (dragEvent.dataTransfer.getData as Mock).mockReturnValue('');
 
       await act(async () => {
         await result.current.handleDrop(dragEvent, { target: 'test' });
@@ -224,7 +225,7 @@ describe('useDragAndDrop', () => {
       const event: Event = { id: '1', title: 'Meeting', date: '2025-10-15' };
       const targetDate = new Date('2025-10-20');
       const dragEvent = createDragEvent('drop');
-      dragEvent.dataTransfer.getData.mockReturnValue(JSON.stringify(event));
+      (dragEvent.dataTransfer.getData as Mock).mockReturnValue(JSON.stringify(event));
 
       await act(async () => {
         await result.current.handleDrop(dragEvent, targetDate);
@@ -251,7 +252,7 @@ describe('useDragAndDrop', () => {
       const task: Task = { id: 123, title: 'Implement feature' };
       const target: KanbanTarget = { columnId: 'done', index: 2 };
       const dragEvent = createDragEvent('drop');
-      dragEvent.dataTransfer.getData.mockReturnValue(JSON.stringify(task));
+      (dragEvent.dataTransfer.getData as Mock).mockReturnValue(JSON.stringify(task));
 
       await act(async () => {
         await result.current.handleDrop(dragEvent, target);
@@ -277,7 +278,7 @@ describe('useDragAndDrop', () => {
       const file: FileData = { name: 'document.pdf', size: 1024 };
       const target: UploadTarget = { folderId: 'folder-123' };
       const dragEvent = createDragEvent('drop');
-      dragEvent.dataTransfer.getData.mockReturnValue(JSON.stringify(file));
+      (dragEvent.dataTransfer.getData as Mock).mockReturnValue(JSON.stringify(file));
 
       await act(async () => {
         await result.current.handleDrop(dragEvent, target);

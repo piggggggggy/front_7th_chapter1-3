@@ -97,6 +97,9 @@ export default [
 
       // Storybook rules
       ...storybookPlugin.configs.recommended.rules,
+
+      // TypeScript rules
+      '@typescript-eslint/no-unused-vars': 'warn',
     },
   },
 
