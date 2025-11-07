@@ -94,14 +94,6 @@ export class EventFormPage {
   async selectNotification(minutes: number) {
     await this.notificationSelect.click();
 
-    // const notificationLabels: Record<number, string> = {
-    //   1: '1분 전',
-    //   10: '10분 전',
-    //   60: '1시간 전',
-    //   120: '2시간 전',
-    //   1440: '1일 전',
-    // };
-
     await this.page.getByRole('option', { name: `${minutes}-option` }).click();
   }
 

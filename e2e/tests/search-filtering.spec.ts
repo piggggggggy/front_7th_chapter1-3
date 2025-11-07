@@ -17,7 +17,7 @@ test.describe('검색 및 필터링', () => {
     eventListPage = new EventListPage(page);
 
     // Clear events first
-    await page.goto('http://localhost:5173/', { waitUntil: 'networkidle' });
+    await calendarPage.goto();
     await APIHelpers.clearAllEvents(page);
     TestDataFactory.reset();
   });
