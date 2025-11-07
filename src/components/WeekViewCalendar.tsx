@@ -12,7 +12,7 @@ import {
 import { DragAndDropHandlers } from '../hooks/useDragAndDrop';
 import { Event } from '../types';
 import { EventBox } from './EventBox';
-import { formatWeek, getWeekDates } from '../utils/dateUtils';
+import { formatDate, formatWeek, getWeekDates } from '../utils/dateUtils';
 
 interface WeekViewCalendarProps {
   currentDate: Date;
@@ -48,15 +48,19 @@ export function WeekViewCalendar({
             </TableRow>
           </TableHead>
           <TableBody>
-            <TableRow>
+            <TableRow data-testid="week-view-table-body">
               {weekDates.map((date) => (
                 <TableCell
-                  key={date.toISOString()}
+                  key={formatDate(date, date.getDate())}
                   onDragOver={dragHandlers?.handleDragOver}
                   onDragLeave={dragHandlers?.handleDragLeave}
-                  onDrop={dragHandlers ? (e) => dragHandlers.handleDrop(e, date) : undefined}
+                  onDrop={
+                    dragHandlers
+                      ? (e) => dragHandlers.handleDrop(e, formatDate(currentDate, date.getDate()))
+                      : undefined
+                  }
                   onClick={
-                    onCellClick ? () => onCellClick(date.toISOString().split('T')[0]) : undefined
+                    onCellClick ? () => onCellClick(formatDate(date, date.getDate())) : undefined
                   }
                   sx={{
                     height: '120px',
