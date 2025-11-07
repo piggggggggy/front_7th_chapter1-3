@@ -5,6 +5,7 @@ import { CalendarPage } from '../pages/CalendarPage';
 import { EventFormPage } from '../pages/EventFormPage';
 import { EventListPage } from '../pages/EventListPage';
 import { APIHelpers } from '../utils/api-helpers';
+import { SeedHelpers } from '../utils/seed-helpers';
 
 test.describe('기본 일정 관리 워크플로우', () => {
   let calendarPage: CalendarPage;
@@ -17,9 +18,14 @@ test.describe('기본 일정 관리 워크플로우', () => {
     eventFormPage = new EventFormPage(page);
     eventListPage = new EventListPage(page);
 
-    // Clear all events before each test
+    // Reset database directly (no API calls)
+    SeedHelpers.resetDatabase();
+
+    // Navigate to page (database already clean)
     await calendarPage.goto();
-    await APIHelpers.clearAllEvents(page);
+
+    // Wait for initial data loading to complete
+    await page.waitForLoadState('networkidle');
 
     // Reset test data factory
     TestDataFactory.reset();
@@ -89,6 +95,7 @@ test.describe('기본 일정 관리 워크플로우', () => {
 
     await APIHelpers.createEvent(page, originalEvent);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // When: 일정 편집
     await eventListPage.clickEditButton(originalEvent.title);
@@ -112,6 +119,7 @@ test.describe('기본 일정 관리 워크플로우', () => {
 
     await APIHelpers.createEvent(page, eventData);
     await page.reload();
+    await page.waitForLoadState('networkidle');
     await eventListPage.assertEventInList(eventData.title);
 
     // When: 일정 삭제

@@ -6,6 +6,7 @@ import { DialogPage } from '../pages/DialogPage';
 import { EventFormPage } from '../pages/EventFormPage';
 import { EventListPage } from '../pages/EventListPage';
 import { APIHelpers } from '../utils/api-helpers';
+import { SeedHelpers } from '../utils/seed-helpers';
 
 test.describe('일정 겹침 처리', () => {
   let calendarPage: CalendarPage;
@@ -19,8 +20,9 @@ test.describe('일정 겹침 처리', () => {
     dialogPage = new DialogPage(page);
     eventListPage = new EventListPage(page);
 
+    SeedHelpers.resetDatabase();
     await calendarPage.goto();
-    await APIHelpers.clearAllEvents(page);
+    await page.waitForLoadState('networkidle');
     TestDataFactory.reset();
   });
 
@@ -36,6 +38,7 @@ test.describe('일정 겹침 처리', () => {
 
     await APIHelpers.createEvent(page, existingEvent);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // When: 겹치는 시간에 새 일정 생성 시도
     await eventFormPage.fillTitle('겹치는 회의');
@@ -64,6 +67,7 @@ test.describe('일정 겹침 처리', () => {
 
     await APIHelpers.createEvent(page, existingEvent);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // When: 겹치는 일정 생성 시도 후 취소
     const newEventTitle = '취소될 미팅';
@@ -94,6 +98,7 @@ test.describe('일정 겹침 처리', () => {
 
     await APIHelpers.createEvent(page, existingEvent);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // When: 겹치는 일정 생성 후 계속 진행
     const newEventTitle = '진행할 세션';
@@ -123,6 +128,7 @@ test.describe('일정 겹침 처리', () => {
 
     await APIHelpers.createEvent(page, existingEvent);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // When: 완전히 동일한 시간에 일정 생성
     await eventFormPage.fillTitle('완전 겹침 복사본');
@@ -146,6 +152,7 @@ test.describe('일정 겹침 처리', () => {
 
     await APIHelpers.createEvent(page, existingEvent);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // When: 부분적으로 겹치는 일정 생성 (끝 시간만 겹침)
     await eventFormPage.fillTitle('부분 겹침 새 일정');
@@ -181,6 +188,7 @@ test.describe('일정 겹침 처리', () => {
     await APIHelpers.createEvent(page, event1);
     await APIHelpers.createEvent(page, event2);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // When: event2를 event1의 날짜로 드래그
     await calendarPage.dragEventToDate(event2.title, date1);
@@ -210,6 +218,7 @@ test.describe('일정 겹침 처리', () => {
     await APIHelpers.createEvent(page, event1);
     await APIHelpers.createEvent(page, event2);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // When: event2의 시간을 event1과 겹치도록 수정
     await eventListPage.clickEditButton(event2.title);
@@ -232,6 +241,7 @@ test.describe('일정 겹침 처리', () => {
 
     await APIHelpers.createEvent(page, existingEvent);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // When: 겹치지 않는 시간에 일정 생성
     const newEventTitle = '오후 일정';

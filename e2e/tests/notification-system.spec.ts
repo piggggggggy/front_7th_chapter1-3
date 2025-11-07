@@ -5,7 +5,7 @@ import { CalendarPage } from '../pages/CalendarPage';
 import { EventFormPage } from '../pages/EventFormPage';
 import { EventListPage } from '../pages/EventListPage';
 import { NotificationPage } from '../pages/NotificationPage';
-import { APIHelpers } from '../utils/api-helpers';
+import { SeedHelpers } from '../utils/seed-helpers';
 
 test.describe('알림 시스템', () => {
   let calendarPage: CalendarPage;
@@ -19,8 +19,9 @@ test.describe('알림 시스템', () => {
     eventListPage = new EventListPage(page);
     notificationPage = new NotificationPage(page);
 
+    SeedHelpers.resetDatabase();
     await calendarPage.goto();
-    await APIHelpers.clearAllEvents(page);
+    await page.waitForLoadState('networkidle');
     TestDataFactory.reset();
   });
 

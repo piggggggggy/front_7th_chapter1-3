@@ -5,7 +5,7 @@ import { CalendarPage } from '../pages/CalendarPage';
 import { DialogPage } from '../pages/DialogPage';
 import { EventFormPage } from '../pages/EventFormPage';
 import { EventListPage } from '../pages/EventListPage';
-import { APIHelpers } from '../utils/api-helpers';
+import { SeedHelpers } from '../utils/seed-helpers';
 
 test.describe('반복 일정 관리 워크플로우', () => {
   let calendarPage: CalendarPage;
@@ -19,8 +19,9 @@ test.describe('반복 일정 관리 워크플로우', () => {
     eventListPage = new EventListPage(page);
     dialogPage = new DialogPage(page);
 
+    SeedHelpers.resetDatabase();
     await calendarPage.goto();
-    await APIHelpers.clearAllEvents(page);
+    await page.waitForLoadState('networkidle');
     TestDataFactory.reset();
   });
 
@@ -168,6 +169,7 @@ test.describe('반복 일정 관리 워크플로우', () => {
     await eventFormPage.fillRecurringEvent(recurringData);
     await eventFormPage.submit();
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // Get initial count
     const initialCount = await page.getByText(recurringData.title).count();

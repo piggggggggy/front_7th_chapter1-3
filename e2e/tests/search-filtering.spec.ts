@@ -5,6 +5,7 @@ import { CalendarPage } from '../pages/CalendarPage';
 import { EventFormPage } from '../pages/EventFormPage';
 import { EventListPage } from '../pages/EventListPage';
 import { APIHelpers } from '../utils/api-helpers';
+import { SeedHelpers } from '../utils/seed-helpers';
 
 test.describe('검색 및 필터링', () => {
   let calendarPage: CalendarPage;
@@ -16,9 +17,9 @@ test.describe('검색 및 필터링', () => {
     eventFormPage = new EventFormPage(page);
     eventListPage = new EventListPage(page);
 
-    // Clear events first
+    SeedHelpers.resetDatabase();
     await calendarPage.goto();
-    await APIHelpers.clearAllEvents(page);
+    await page.waitForLoadState('networkidle');
     TestDataFactory.reset();
   });
 
@@ -84,6 +85,7 @@ test.describe('검색 및 필터링', () => {
     await APIHelpers.createEvent(page, event1);
     await APIHelpers.createEvent(page, event2);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // When: "프로젝트"로 검색
     await eventListPage.search('프로젝트');
@@ -118,6 +120,7 @@ test.describe('검색 및 필터링', () => {
     await APIHelpers.createEvent(page, event2);
     await APIHelpers.createEvent(page, event3);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // When: "회의실"로 검색
     await eventListPage.search('회의실');
@@ -144,6 +147,7 @@ test.describe('검색 및 필터링', () => {
     await APIHelpers.createEvent(page, event1);
     await APIHelpers.createEvent(page, event2);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     await eventListPage.search('검색');
     const eventList = page.locator('[data-testid="event-list"]');
@@ -168,6 +172,7 @@ test.describe('검색 및 필터링', () => {
 
     await APIHelpers.createEvent(page, event);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // When: 소문자로 검색
     await eventListPage.search('team');
@@ -193,6 +198,7 @@ test.describe('검색 및 필터링', () => {
 
     await APIHelpers.createEvent(page, event);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // When: 일부만 검색
     await eventListPage.search('킥오프');
@@ -221,6 +227,7 @@ test.describe('검색 및 필터링', () => {
     await APIHelpers.createEvent(page, currentMonthEvent);
     await APIHelpers.createEvent(page, nextMonthEvent);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // When: 월간 뷰에서 현재 월 확인
     await calendarPage.switchToMonthView();
@@ -255,6 +262,7 @@ test.describe('검색 및 필터링', () => {
     await APIHelpers.createEvent(page, currentWeekEvent);
     await APIHelpers.createEvent(page, nextWeekEvent);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // When: 주간 뷰로 전환
     await calendarPage.switchToWeekView();
@@ -278,6 +286,7 @@ test.describe('검색 및 필터링', () => {
 
     await APIHelpers.createEvent(page, event);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // When: 존재하지 않는 검색어 입력
     await eventListPage.search('존재하지않는검색어12345');
@@ -307,6 +316,7 @@ test.describe('검색 및 필터링', () => {
     await APIHelpers.createEvent(page, workEvent);
     await APIHelpers.createEvent(page, personalEvent);
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // When: "업무" 카테고리로 검색
     await eventListPage.search('업무');
